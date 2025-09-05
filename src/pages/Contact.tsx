@@ -15,10 +15,9 @@ const Contact = () => {
   const { toast } = useToast();
 
   const topics = [
+    'General Inquiry',
     'Consulting Opportunity',
-    'Media Interview',
-    'Partnership Discussion',
-    'General Inquiry'
+    'Other'
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
