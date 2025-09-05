@@ -1,15 +1,12 @@
 import { ArrowRight, Download, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import heroImage from '@/assets/hero-bg.jpg';
-
 const Hero = () => {
-  return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-background via-background to-muted">
+  return <section className="relative overflow-hidden bg-gradient-to-br from-background via-background to-muted">
       {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      />
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5" style={{
+      backgroundImage: `url(${heroImage})`
+    }} />
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
         <div className="text-center">
@@ -29,18 +26,12 @@ const Hero = () => {
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <Link 
-              to="/about"
-              className="btn-hero inline-flex items-center group"
-            >
+            <Link to="/about" className="btn-hero inline-flex items-center group">
               Learn About Seth
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
             
-            <Link 
-              to="/contact"
-              className="btn-outline inline-flex items-center group"
-            >
+            <Link to="/contact" className="btn-outline inline-flex items-center group">
               Get In Touch
               <ExternalLink className="ml-2 h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
             </Link>
@@ -56,10 +47,7 @@ const Hero = () => {
               <div className="text-3xl font-bold text-accent mb-2">50+</div>
               <div className="text-muted-foreground">Speaking Engagements</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary-glow mb-2">100+</div>
-              <div className="text-muted-foreground">Teams Led</div>
-            </div>
+            
           </div>
         </div>
       </div>
@@ -67,8 +55,6 @@ const Hero = () => {
       {/* Decorative Elements */}
       <div className="absolute top-1/4 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
