@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import WordPressImport from '@/components/WordPressImport';
 
 interface Post {
   id: string;
@@ -209,6 +210,11 @@ const Admin = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* WordPress Import */}
+          <div className="mb-8">
+            <WordPressImport />
           </div>
 
           {/* Posts List */}
