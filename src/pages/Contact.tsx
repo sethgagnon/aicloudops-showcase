@@ -4,7 +4,6 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -13,30 +12,22 @@ const Contact = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const topics = [
-    'General Inquiry',
-    'Consulting Opportunity',
-    'Other'
-  ];
-
+  const {
+    toast
+  } = useToast();
+  const topics = ['General Inquiry', 'Consulting Opportunity', 'Other'];
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      const { error: insertError } = await supabase
-        .from('contacts')
-        .insert([
-          {
-            name: formData.name,
-            email: formData.email,
-            topic: formData.topic,
-            message: formData.message,
-          },
-        ]);
-
+      const {
+        error: insertError
+      } = await supabase.from('contacts').insert([{
+        name: formData.name,
+        email: formData.email,
+        topic: formData.topic,
+        message: formData.message
+      }]);
       if (insertError) throw insertError;
 
       // Send notifications (owner + confirmation)
@@ -45,37 +36,37 @@ const Contact = () => {
           name: formData.name,
           email: formData.email,
           topic: formData.topic,
-          message: formData.message,
-        },
+          message: formData.message
+        }
       });
-
       toast({
         title: "Message sent successfully!",
-        description: "Thank you for reaching out. I'll get back to you within 24 hours.",
+        description: "Thank you for reaching out. I'll get back to you within 24 hours."
       });
-
-      setFormData({ name: '', email: '', topic: '', message: '' });
+      setFormData({
+        name: '',
+        email: '',
+        topic: '',
+        message: ''
+      });
     } catch (error: any) {
       console.error('Contact submit error:', error);
       toast({
         title: "Error sending message",
         description: "Please try again or contact me directly via email.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
       
       <main>
@@ -125,7 +116,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Location</h3>
-                      <p className="text-muted-foreground">San Francisco Bay Area</p>
+                      <p className="text-muted-foreground">Boston Area</p>
                       <p className="text-sm text-muted-foreground">Available for in-person meetings</p>
                     </div>
                   </div>
@@ -137,7 +128,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Response Time</h3>
                       <p className="text-muted-foreground">Within 24 hours</p>
-                      <p className="text-sm text-muted-foreground">Monday - Friday, 9 AM - 5 PM EST</p>
+                      <p className="text-sm text-muted-foreground">Monday - Friday, 9 AM - 6 PM PST</p>
                     </div>
                   </div>
                 </div>
@@ -169,51 +160,25 @@ const Contact = () => {
                     <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                       Full Name *
                     </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
-                      placeholder="Your full name"
-                    />
+                    <input type="text" id="name" name="name" required value={formData.name} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300" placeholder="Your full name" />
                   </div>
 
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                       Email Address *
                     </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      required
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
-                      placeholder="your.email@company.com"
-                    />
+                    <input type="email" id="email" name="email" required value={formData.email} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300" placeholder="your.email@company.com" />
                   </div>
 
                   <div>
                     <label htmlFor="topic" className="block text-sm font-medium text-foreground mb-2">
                       Topic
                     </label>
-                    <select
-                      id="topic"
-                      name="topic"
-                      value={formData.topic}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"
-                    >
+                    <select id="topic" name="topic" value={formData.topic} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300">
                       <option value="">Select a topic</option>
-                      {topics.map((topic) => (
-                        <option key={topic} value={topic}>
+                      {topics.map(topic => <option key={topic} value={topic}>
                           {topic}
-                        </option>
-                      ))}
+                        </option>)}
                     </select>
                   </div>
 
@@ -221,23 +186,10 @@ const Contact = () => {
                     <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
                       Message *
                     </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      required
-                      rows={6}
-                      value={formData.message}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 resize-none"
-                      placeholder="Tell me about your project or how I can help..."
-                    />
+                    <textarea id="message" name="message" required rows={6} value={formData.message} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 resize-none" placeholder="Tell me about your project or how I can help..." />
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full btn-hero disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button type="submit" disabled={isSubmitting} className="w-full btn-hero disabled:opacity-50 disabled:cursor-not-allowed">
                     <Send className="mr-2 h-5 w-5" />
                     {isSubmitting ? 'Sending...' : 'Send Message'}
                   </button>
@@ -249,8 +201,6 @@ const Contact = () => {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Contact;
