@@ -42,8 +42,8 @@ const About = () => {
                 Meet Seth Gagnon
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Technology leader, AI strategist, and team builder with 15+ years of experience 
-                driving digital transformation in enterprise environments.
+                Seasoned leader in public cloud consulting, guiding application teams across the enterprise 
+                through their cloud transformation journey with expertise in AWS, Azure, and Google Cloud.
               </p>
             </div>
 
@@ -65,20 +65,25 @@ const About = () => {
                 <h2 className="text-2xl font-bold text-foreground mb-6">Professional Background</h2>
                 <div className="prose prose-lg max-w-none">
                   <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                    Technology executive and strategic leader with extensive experience in AI, cloud computing, 
-                    and organizational transformation. Passionate about building high-performance teams and 
-                    driving innovation in enterprise environments.
+                    As a seasoned leader in public cloud consulting, I spearhead a dynamic team of industry experts, 
+                    guiding application teams across the enterprise through their cloud transformation journey, 
+                    leveraging cloud platforms like AWS, Azure, and Google Cloud. With a deep understanding of cloud 
+                    architectures and a strategic approach to innovation, I ensure that every project aligns with our 
+                    customer's business goals and sets new benchmarks in efficiency and scalability.
                   </p>
                   
                   <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                    Currently focused on helping organizations navigate the intersection of artificial intelligence 
-                    and cloud technologies, with particular expertise in scaling engineering teams and 
-                    implementing AI-first operating models.
+                    Currently serving as Cloud Engineering Director at Evernorth Health Services, I oversee a team of 
+                    cloud engineers working across the enterprise to enable cloud adoption. I'm responsible for fully 
+                    understanding and delivering cloud engineered solutions for the end user community, including 
+                    documentation and relevant code artifacts.
                   </p>
                   
                   <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                    Regular contributor to industry publications and speaker at technology conferences, 
-                    sharing insights on AI strategy, cloud architecture, and modern leadership practices.
+                    Whether navigating complex migrations, optimizing cloud operations, or innovating with cloud-native 
+                    technologies, my mission is to lead transformations that redefine how businesses operate and thrive 
+                    in the digital era. I foster a culture of continuous learning to stay at the forefront of industry 
+                    trends, enabling cutting-edge insights and robust solutions.
                   </p>
                 </div>
               </div>
@@ -91,22 +96,29 @@ const About = () => {
                     <div className="flex items-start space-x-3">
                       <Briefcase className="h-5 w-5 text-primary mt-0.5" />
                       <div>
-                        <p className="font-medium text-foreground">Current Focus</p>
-                        <p className="text-sm text-muted-foreground">AI Strategy & Cloud Leadership</p>
+                        <p className="font-medium text-foreground">Current Role</p>
+                        <p className="text-sm text-muted-foreground">Cloud Engineering Director</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <Users className="h-5 w-5 text-primary mt-0.5" />
                       <div>
-                        <p className="font-medium text-foreground">Specialization</p>
-                        <p className="text-sm text-muted-foreground">Engineering Team Building</p>
+                        <p className="font-medium text-foreground">Company</p>
+                        <p className="text-sm text-muted-foreground">Evernorth Health Services</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <Award className="h-5 w-5 text-primary mt-0.5" />
                       <div>
-                        <p className="font-medium text-foreground">Experience</p>
-                        <p className="text-sm text-muted-foreground">15+ Years Technology Leadership</p>
+                        <p className="font-medium text-foreground">Business Owner</p>
+                        <p className="text-sm text-muted-foreground">CloudTech LLC (5+ years)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <GraduationCap className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium text-foreground">Location</p>
+                        <p className="text-sm text-muted-foreground">North Andover, MA</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
@@ -141,39 +153,43 @@ const About = () => {
               <div className="card-elegant">
                 <div className="flex items-center mb-4">
                   <Briefcase className="h-6 w-6 text-primary mr-3" />
-                  <h3 className="text-lg font-semibold text-foreground">Leadership Roles</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Evernorth Health Services</h3>
+                  <span className="text-sm text-muted-foreground ml-auto">2022 - Present</span>
                 </div>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li>• Technology Executive Positions</li>
-                  <li>• Engineering Team Leadership</li>
-                  <li>• Strategic Planning & Execution</li>
-                  <li>• Organizational Transformation</li>
+                <p className="text-sm font-medium text-foreground mb-2">Cloud Engineering Director</p>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>• Oversee team of cloud engineers across enterprise</li>
+                  <li>• Enable cloud adoption organization-wide</li>
+                  <li>• Deliver cloud engineered solutions for end users</li>
+                  <li>• Lead technical oversight and artifact review</li>
                 </ul>
               </div>
 
               <div className="card-elegant">
                 <div className="flex items-center mb-4">
                   <Award className="h-6 w-6 text-primary mr-3" />
-                  <h3 className="text-lg font-semibold text-foreground">Key Achievements</h3>
+                  <h3 className="text-lg font-semibold text-foreground">CloudTech LLC</h3>
+                  <span className="text-sm text-muted-foreground ml-auto">2020 - Present</span>
                 </div>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li>• Large-scale Cloud Migrations</li>
-                  <li>• AI Implementation Programs</li>
-                  <li>• Team Scaling Initiatives</li>
-                  <li>• Cultural Transformation</li>
+                <p className="text-sm font-medium text-foreground mb-2">Owner & Cloud Solutions Consultant</p>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>• Technology solutions and advisory services</li>
+                  <li>• Application migration project leadership</li>
+                  <li>• Cloud architecture and engineering guidance</li>
+                  <li>• Cost optimization and roadmap definition</li>
                 </ul>
               </div>
 
               <div className="card-elegant">
                 <div className="flex items-center mb-4">
                   <Users className="h-6 w-6 text-primary mr-3" />
-                  <h3 className="text-lg font-semibold text-foreground">Industry Impact</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Core Specializations</h3>
                 </div>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li>• Conference Speaking</li>
-                  <li>• Thought Leadership</li>
-                  <li>• Industry Publications</li>
-                  <li>• Community Building</li>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>• Cloud Platform Architecture (AWS, Azure, GCP)</li>
+                  <li>• Enterprise Application Migration</li>
+                  <li>• Cross-functional Team Leadership</li>
+                  <li>• Technical Documentation & Code Artifacts</li>
                 </ul>
               </div>
             </div>
