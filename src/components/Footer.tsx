@@ -22,7 +22,7 @@ const Footer = () => {
     },
     {
       name: 'Email',
-      href: 'mailto:seth@aicloudops.tech',
+      href: 'mailto:sethgagnon@gmail.com',
       icon: Mail
     }
   ];

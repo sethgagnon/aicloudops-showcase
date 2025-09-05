@@ -15,7 +15,7 @@ interface ContactNotifyPayload {
   message: string;
 }
 
-const OWNER_EMAIL = "seth@aicloudops.tech"; // Update if needed
+const OWNER_EMAIL = "sethgagnon@gmail.com"; // Update if needed
 
 serve(async (req) => {
   // Handle CORS preflight requests
