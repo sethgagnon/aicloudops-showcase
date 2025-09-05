@@ -59,35 +59,132 @@ const About = () => {
         {/* Bio Section */}
         <section className="py-16">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="prose prose-lg max-w-none">
-              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                Seth Gagnon is a seasoned technology executive with over 15 years of experience leading 
-                digital transformation initiatives across Fortune 500 companies. Currently serving as 
-                Chief Technology Officer at a leading cloud services company, Seth specializes in AI 
-                strategy, cloud architecture, and building high-performance engineering teams.
-              </p>
-              
-              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                His expertise spans the full spectrum of modern technology leadership, from hands-on 
-                technical architecture to strategic planning and organizational development. Seth has 
-                successfully led teams of 100+ engineers through complex cloud migrations, AI adoption 
-                initiatives, and cultural transformations.
-              </p>
-              
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                As a thought leader in the intersection of AI, cloud computing, and leadership, Seth 
-                regularly speaks at industry conferences and contributes to leading technology publications. 
-                His insights help other leaders navigate the rapidly evolving landscape of enterprise technology.
-              </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+              {/* Main Bio */}
+              <div className="lg:col-span-2">
+                <h2 className="text-2xl font-bold text-foreground mb-6">Professional Background</h2>
+                <div className="prose prose-lg max-w-none">
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                    Technology executive and strategic leader with extensive experience in AI, cloud computing, 
+                    and organizational transformation. Passionate about building high-performance teams and 
+                    driving innovation in enterprise environments.
+                  </p>
+                  
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                    Currently focused on helping organizations navigate the intersection of artificial intelligence 
+                    and cloud technologies, with particular expertise in scaling engineering teams and 
+                    implementing AI-first operating models.
+                  </p>
+                  
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+                    Regular contributor to industry publications and speaker at technology conferences, 
+                    sharing insights on AI strategy, cloud architecture, and modern leadership practices.
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick Facts */}
+              <div className="lg:col-span-1">
+                <div className="card-elegant">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Quick Facts</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <Briefcase className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium text-foreground">Current Focus</p>
+                        <p className="text-sm text-muted-foreground">AI Strategy & Cloud Leadership</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <Users className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium text-foreground">Specialization</p>
+                        <p className="text-sm text-muted-foreground">Engineering Team Building</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <Award className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium text-foreground">Experience</p>
+                        <p className="text-sm text-muted-foreground">15+ Years Technology Leadership</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <ExternalLink className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium text-foreground">LinkedIn</p>
+                        <a 
+                          href="https://www.linkedin.com/in/sethgagnon/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:text-primary-glow transition-colors"
+                        >
+                          /in/sethgagnon
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Experience Highlights */}
+        <section className="py-16 bg-muted/30">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-foreground text-center mb-12">
+              Professional Experience Highlights
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="card-elegant">
+                <div className="flex items-center mb-4">
+                  <Briefcase className="h-6 w-6 text-primary mr-3" />
+                  <h3 className="text-lg font-semibold text-foreground">Leadership Roles</h3>
+                </div>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li>• Technology Executive Positions</li>
+                  <li>• Engineering Team Leadership</li>
+                  <li>• Strategic Planning & Execution</li>
+                  <li>• Organizational Transformation</li>
+                </ul>
+              </div>
+
+              <div className="card-elegant">
+                <div className="flex items-center mb-4">
+                  <Award className="h-6 w-6 text-primary mr-3" />
+                  <h3 className="text-lg font-semibold text-foreground">Key Achievements</h3>
+                </div>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li>• Large-scale Cloud Migrations</li>
+                  <li>• AI Implementation Programs</li>
+                  <li>• Team Scaling Initiatives</li>
+                  <li>• Cultural Transformation</li>
+                </ul>
+              </div>
+
+              <div className="card-elegant">
+                <div className="flex items-center mb-4">
+                  <Users className="h-6 w-6 text-primary mr-3" />
+                  <h3 className="text-lg font-semibold text-foreground">Industry Impact</h3>
+                </div>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li>• Conference Speaking</li>
+                  <li>• Thought Leadership</li>
+                  <li>• Industry Publications</li>
+                  <li>• Community Building</li>
+                </ul>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Skills Section */}
-        <section className="py-16 bg-muted/30">
+        <section className="py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-foreground text-center mb-12">
-              Core Expertise
+              Core Expertise & Skills
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
