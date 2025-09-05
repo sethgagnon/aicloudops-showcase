@@ -44,8 +44,8 @@ const Hero = () => {
               <div className="text-muted-foreground">Years in Technology</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-accent mb-2">50+</div>
-              <div className="text-muted-foreground">Speaking Engagements</div>
+              
+              
             </div>
             
           </div>
