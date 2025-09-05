@@ -15,7 +15,6 @@ const Contact = () => {
   const { toast } = useToast();
 
   const topics = [
-    'Speaking Engagement',
     'Consulting Opportunity',
     'Media Interview',
     'Partnership Discussion',
@@ -66,8 +65,7 @@ const Contact = () => {
               Let's Start a Conversation
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Whether you're looking for strategic insights, speaking opportunities, 
-              or collaboration on innovative projects, I'd love to hear from you.
+              Whether you're looking for strategic insights or collaboration on innovative projects, I'd love to hear from you.
             </p>
           </div>
         </section>
@@ -210,7 +208,7 @@ const Contact = () => {
                       value={formData.message}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 resize-none"
-                      placeholder="Tell me about your project, speaking opportunity, or how I can help..."
+                      placeholder="Tell me about your project or how I can help..."
                     />
                   </div>
 

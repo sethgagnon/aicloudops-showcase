@@ -15,19 +15,6 @@ const About = () => {
     category: 'DevOps & Architecture',
     items: ['CI/CD', 'Infrastructure as Code', 'Microservices', 'Security']
   }];
-  const speakingTopics = [{
-    title: 'AI Leadership in Enterprise',
-    description: 'Building AI-first organizations and leading digital transformation initiatives.'
-  }, {
-    title: 'Cloud Strategy & Architecture',
-    description: 'Designing scalable cloud solutions and managing large-scale migrations.'
-  }, {
-    title: 'High-Performance Teams',
-    description: 'Creating engineering cultures that deliver exceptional results.'
-  }, {
-    title: 'Future of Work & Technology',
-    description: 'Navigating remote leadership and emerging technology trends.'
-  }];
   return <div className="min-h-screen bg-background">
       <Navigation />
       
@@ -211,8 +198,6 @@ const About = () => {
           </div>
         </section>
 
-        {/* Speaking Section */}
-        
 
         {/* Contact CTA */}
         <section className="py-16 bg-gradient-to-r from-primary/10 to-accent/10">

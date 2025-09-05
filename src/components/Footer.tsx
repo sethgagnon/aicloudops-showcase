@@ -32,7 +32,7 @@ const Footer = () => {
       title: 'Content',
       links: [
         { name: 'Blog', href: '/blog' },
-        { name: 'Speaking', href: '/about#speaking' },
+        
         { name: 'Media Kit', href: '/about#media' }
       ]
     },
