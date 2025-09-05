@@ -17,7 +17,11 @@ const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }: ProfileImageUplo
   const { user } = useAuth();
 
   const handleFileSelect = async (file: File) => {
-    if (!user) return;
+    if (!user) {
+      // Show a message to sign in first
+      alert('Please sign in to upload your profile picture');
+      return;
+    }
 
     const imageUrl = await uploadImage(file);
     if (imageUrl) {
@@ -60,6 +64,11 @@ const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }: ProfileImageUplo
   };
 
   const triggerFileInput = () => {
+    if (!user) {
+      // Could show a toast or redirect to auth, but for now just return
+      alert('Please sign in to upload your profile picture');
+      return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -102,7 +111,7 @@ const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }: ProfileImageUplo
             ) : (
               <>
                 <Camera className="h-4 w-4 mr-2" />
-                Change Photo
+                {user ? 'Change Photo' : 'Upload Photo'}
               </>
             )}
           </Button>
@@ -113,7 +122,9 @@ const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }: ProfileImageUplo
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center p-4">
               <Upload className="h-8 w-8 text-primary/60 mx-auto mb-2" />
-              <p className="text-sm text-primary/60">Click or drag to upload</p>
+              <p className="text-sm text-primary/60">
+                {user ? 'Click or drag to upload' : 'Sign in to upload photo'}
+              </p>
             </div>
           </div>
         )}
