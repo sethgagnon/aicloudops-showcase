@@ -22,7 +22,7 @@ const About = () => {
       .from('profiles')
       .select('avatar_url')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
     
     if (data?.avatar_url) {
       setProfileImageUrl(data.avatar_url);
