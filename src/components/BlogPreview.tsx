@@ -76,7 +76,7 @@ const BlogPreview = () => {
               Latest Insights
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Deep dives into AI, cloud architecture, and leadership strategies 
+              Deep dives into AI, cloud, and leadership strategies 
               for the modern enterprise.
             </p>
           </div>
@@ -134,7 +134,7 @@ const BlogPreview = () => {
             Latest Insights
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Deep dives into AI, cloud architecture, and leadership strategies 
+            Deep dives into AI, cloud, and leadership strategies 
             for the modern enterprise.
           </p>
         </div>
