@@ -1,4 +1,4 @@
-import { ArrowRight, Download, ExternalLink } from 'lucide-react';
+import { ArrowRight, Download, ExternalLink, Cloud, Server, Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import heroImage from '@/assets/hero-bg.jpg';
 const Hero = () => {
@@ -44,8 +44,21 @@ const Hero = () => {
               <div className="text-muted-foreground">Years in Technology</div>
             </div>
             <div className="text-center">
-              
-              
+              <div className="text-sm text-muted-foreground mb-3">Cloud Platforms</div>
+              <div className="flex justify-center items-center gap-4">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Cloud className="h-4 w-4 text-primary" />
+                  <span>AWS</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Server className="h-4 w-4 text-primary" />
+                  <span>Azure</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Database className="h-4 w-4 text-primary" />
+                  <span>GCP</span>
+                </div>
+              </div>
             </div>
             
           </div>
