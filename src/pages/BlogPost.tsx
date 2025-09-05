@@ -32,10 +32,7 @@ const BlogPost = () => {
     try {
       const { data, error } = await supabase
         .from('posts')
-        .select(`
-          id, title, content, excerpt, slug, tags, created_at, author_id,
-          profiles(name)
-        `)
+        .select('*')
         .eq('slug', postSlug)
         .eq('status', 'published')
         .single();
@@ -58,6 +55,20 @@ const BlogPost = () => {
     const wordsPerMinute = 200;
     const wordCount = content ? content.split(/\s+/).length : 0;
     return Math.ceil(wordCount / wordsPerMinute);
+  };
+
+  const getTagColor = (tag: string) => {
+    const colors = {
+      'AI': 'bg-primary/10 text-primary border-primary/20',
+      'Cloud': 'bg-accent/10 text-accent border-accent/20',
+      'Leadership': 'bg-primary-glow/10 text-primary-glow border-primary-glow/20',
+      'DevOps': 'bg-secondary/10 text-secondary-foreground border-secondary/20',
+      'Strategy': 'bg-muted text-muted-foreground border-border',
+      'Security': 'bg-destructive/10 text-destructive border-destructive/20',
+      'Culture': 'bg-success/10 text-success border-success/20',
+      'Remote Work': 'bg-accent-soft/20 text-accent border-accent/20'
+    };
+    return colors[tag as keyof typeof colors] || 'bg-muted text-muted-foreground border-border';
   };
 
   if (loading) {
@@ -90,18 +101,6 @@ const BlogPost = () => {
       </div>
     );
   }
-    const colors = {
-      'AI': 'bg-primary/10 text-primary border-primary/20',
-      'Cloud': 'bg-accent/10 text-accent border-accent/20',
-      'Leadership': 'bg-primary-glow/10 text-primary-glow border-primary-glow/20',
-      'DevOps': 'bg-secondary/10 text-secondary-foreground border-secondary/20',
-      'Strategy': 'bg-muted text-muted-foreground border-border',
-      'Security': 'bg-destructive/10 text-destructive border-destructive/20',
-      'Culture': 'bg-success/10 text-success border-success/20',
-      'Remote Work': 'bg-accent-soft/20 text-accent border-accent/20'
-    };
-    return colors[tag as keyof typeof colors] || 'bg-muted text-muted-foreground border-border';
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,7 +128,7 @@ const BlogPost = () => {
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
                 <div className="flex items-center">
                   <User className="h-4 w-4 mr-1" />
-                  {post.profiles?.name || 'Anonymous'}
+                  Seth Gagnon
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
@@ -208,7 +207,7 @@ const BlogPost = () => {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Written by {post.profiles?.name || 'Anonymous'}
+                    Written by Seth Gagnon
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Technology executive specializing in AI strategy and cloud architecture
