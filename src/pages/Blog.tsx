@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-
 interface Post {
   id: string;
   title: string;
@@ -14,32 +13,28 @@ interface Post {
   created_at: string;
   status: string;
 }
-
 const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchPosts();
     fetchTags();
   }, []);
-
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('id, title, excerpt, slug, tags, created_at, status')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('posts').select('id, title, excerpt, slug, tags, created_at, status').eq('status', 'published').order('created_at', {
+        ascending: false
+      });
       if (error) {
         console.error('Error fetching posts:', error);
         return;
       }
-
       setAllPosts(data || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -47,32 +42,26 @@ const Blog = () => {
       setLoading(false);
     }
   };
-
   const fetchTags = async () => {
     try {
-      const { data, error } = await supabase
-        .from('tags')
-        .select('name')
-        .order('name');
-
+      const {
+        data,
+        error
+      } = await supabase.from('tags').select('name').order('name');
       if (error) {
         console.error('Error fetching tags:', error);
         return;
       }
-
       setAllTags(data?.map(tag => tag.name) || []);
     } catch (error) {
       console.error('Error fetching tags:', error);
     }
   };
-
   const filteredPosts = allPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTag = !selectedTag || post.tags?.includes(selectedTag);
     return matchesSearch && matchesTag;
   });
-
   const featuredPosts = allPosts.slice(0, 2); // Show first 2 as featured
 
   const calculateReadTime = (content: string) => {
@@ -80,7 +69,6 @@ const Blog = () => {
     const wordCount = content ? content.split(/\s+/).length : 100;
     return Math.ceil(wordCount / wordsPerMinute);
   };
-
   const getTagColor = (tag: string) => {
     const colors = {
       'AI': 'bg-primary/10 text-primary border-primary/20',
@@ -94,9 +82,7 @@ const Blog = () => {
     };
     return colors[tag as keyof typeof colors] || 'bg-muted text-muted-foreground border-border';
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
       
       <main>
@@ -106,20 +92,14 @@ const Blog = () => {
             <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
               Insights & Analysis
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Deep dives into AI leadership, cloud architecture, and building 
-              high-performance engineering teams in the modern enterprise.
-            </p>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Deep dives into AI leadership, cloud, and building high-performance engineering teams in the modern enterprise.</p>
           </div>
         </section>
 
-        {loading ? (
-          <div className="py-16 text-center">
+        {loading ? <div className="py-16 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading posts...</p>
-          </div>
-        ) : (
-          <>
+          </div> : <>
             {/* Search and Filter */}
             <section className="py-8 bg-muted/20 border-b border-border">
               <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -127,63 +107,38 @@ const Blog = () => {
               {/* Search */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search articles..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
+                <input type="text" placeholder="Search articles..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent" />
               </div>
 
               {/* Tag Filter */}
               <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSelectedTag('')}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 border ${
-                    !selectedTag
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-muted-foreground border-border hover:bg-muted'
-                  }`}
-                >
+                <button onClick={() => setSelectedTag('')} className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 border ${!selectedTag ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-muted-foreground border-border hover:bg-muted'}`}>
                   All Topics
                 </button>
-                {allTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => setSelectedTag(tag === selectedTag ? '' : tag)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 border ${
-                      selectedTag === tag
-                        ? getTagColor(tag).replace('bg-', 'bg-').replace('/10', '/20')
-                        : getTagColor(tag) + ' hover:bg-opacity-20'
-                    }`}
-                  >
+                {allTags.map(tag => <button key={tag} onClick={() => setSelectedTag(tag === selectedTag ? '' : tag)} className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 border ${selectedTag === tag ? getTagColor(tag).replace('bg-', 'bg-').replace('/10', '/20') : getTagColor(tag) + ' hover:bg-opacity-20'}`}>
                     {tag}
-                  </button>
-                ))}
+                  </button>)}
               </div>
             </div>
           </div>
         </section>
 
         {/* Featured Posts */}
-        {!searchTerm && !selectedTag && (
-          <section className="py-16">
+        {!searchTerm && !selectedTag && <section className="py-16">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-2xl font-bold text-foreground mb-8">Featured Articles</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {featuredPosts.map((post) => (
-                  <article key={post.id} className="card-feature group cursor-pointer">
+                {featuredPosts.map(post => <article key={post.id} className="card-feature group cursor-pointer">
                     <Link to={`/blog/${post.slug}`} className="block">
                       <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                         <div className="flex items-center space-x-4">
                           <span className="flex items-center">
                             <Calendar className="h-4 w-4 mr-1" />
                             {new Date(post.created_at).toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })}
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
                           </span>
                           <span className="flex items-center">
                             <Clock className="h-4 w-4 mr-1" />
@@ -202,26 +157,19 @@ const Blog = () => {
 
                       <div className="flex items-center justify-between">
                         <div className="flex flex-wrap gap-2">
-                          {(post.tags || []).map((tag) => (
-                            <span
-                              key={tag}
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTagColor(tag)}`}
-                            >
+                          {(post.tags || []).map(tag => <span key={tag} className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTagColor(tag)}`}>
                               <Tag className="h-3 w-3 mr-1" />
                               {tag}
-                            </span>
-                          ))}
+                            </span>)}
                         </div>
                         
                         <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
                       </div>
                     </Link>
-                  </article>
-                ))}
+                  </article>)}
               </div>
             </div>
-          </section>
-        )}
+          </section>}
 
         {/* All Posts */}
         <section className="py-16">
@@ -235,33 +183,26 @@ const Blog = () => {
               </span>
             </div>
 
-            {filteredPosts.length === 0 ? (
-              <div className="text-center py-12">
+            {filteredPosts.length === 0 ? <div className="text-center py-12">
                 <p className="text-xl text-muted-foreground mb-4">
                   No articles found matching your criteria.
                 </p>
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedTag('');
-                  }}
-                  className="btn-outline"
-                >
+                <button onClick={() => {
+                setSearchTerm('');
+                setSelectedTag('');
+              }} className="btn-outline">
                   Clear Filters
                 </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredPosts.map((post) => (
-                  <article key={post.id} className="card-elegant group cursor-pointer">
+              </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredPosts.map(post => <article key={post.id} className="card-elegant group cursor-pointer">
                     <Link to={`/blog/${post.slug}`} className="block">
                       <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                         <span className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
                           {new Date(post.created_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}
+                        month: 'short',
+                        day: 'numeric'
+                      })}
                         </span>
                         <span className="flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
@@ -279,37 +220,25 @@ const Blog = () => {
 
                       <div className="flex items-center justify-between pt-4 border-t border-border">
                         <div className="flex flex-wrap gap-1">
-                          {(post.tags || []).slice(0, 2).map((tag) => (
-                            <span
-                              key={tag}
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTagColor(tag)}`}
-                            >
+                          {(post.tags || []).slice(0, 2).map(tag => <span key={tag} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTagColor(tag)}`}>
                               {tag}
-                            </span>
-                          ))}
-                          {(post.tags || []).length > 2 && (
-                            <span className="text-xs text-muted-foreground px-2 py-0.5">
+                            </span>)}
+                          {(post.tags || []).length > 2 && <span className="text-xs text-muted-foreground px-2 py-0.5">
                               +{(post.tags || []).length - 2}
-                            </span>
-                          )}
+                            </span>}
                         </div>
                         
                         <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
                       </div>
                     </Link>
-                  </article>
-                ))}
-              </div>
-            )}
+                  </article>)}
+              </div>}
           </div>
         </section>
-          </>
-        )}
+          </>}
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Blog;
