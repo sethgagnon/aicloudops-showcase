@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowLeft, Share2, Tag, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -102,6 +103,8 @@ const BlogPost = () => {
     );
   }
 
+  const sanitizedContent = DOMPurify.sanitize(post.content);
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -176,12 +179,12 @@ const BlogPost = () => {
             </header>
 
             {/* Article Content */}
-            <article className="prose prose-lg max-w-none">
-              <div 
-                className="text-foreground leading-relaxed rich-content"
-                dangerouslySetInnerHTML={{ __html: post.content }}
-              />
-            </article>
+              <article className="prose prose-lg max-w-none">
+                <div 
+                  className="text-foreground leading-relaxed rich-content"
+                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                />
+              </article>
 
             {/* Article Footer */}
             <footer className="mt-16 pt-8 border-t border-border">

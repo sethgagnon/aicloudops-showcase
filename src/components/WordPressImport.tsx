@@ -3,6 +3,7 @@ import { Download, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -44,12 +45,9 @@ const WordPressImport = () => {
   const [showPreview, setShowPreview] = useState(false);
 
   const cleanContent = (content: string) => {
-    // Remove WordPress shortcodes and clean HTML
-    return content
-      .replace(/\[\/?\w+[^\]]*\]/g, '') // Remove shortcodes
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
-      .trim();
+    // Remove WordPress shortcodes, then sanitize HTML thoroughly
+    const noShortcodes = content.replace(/\[\/?\w+[^\]]*\]/g, '').trim();
+    return DOMPurify.sanitize(noShortcodes);
   };
 
   const generateSlug = (title: string, originalSlug: string) => {
@@ -113,7 +111,7 @@ const WordPressImport = () => {
           id: post.id,
           title: post.title.rendered.replace(/&#\d+;/g, '').trim(),
           content: cleanContent(post.content.rendered),
-          excerpt: post.excerpt.rendered.replace(/<[^>]*>/g, '').replace(/&#\d+;/g, '').trim(),
+          excerpt: DOMPurify.sanitize(post.excerpt.rendered, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).replace(/&#\d+;/g, '').trim(),
           slug: generateSlug(post.title.rendered, post.slug),
           date: post.date,
           tags: tags.slice(0, 5), // Limit to 5 tags
