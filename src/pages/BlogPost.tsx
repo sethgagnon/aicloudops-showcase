@@ -1,91 +1,95 @@
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowLeft, Share2, Tag, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
-// Mock blog post data - in real app this would come from Supabase
-const blogPost = {
-  title: "Building AI-First Organizations: A Leadership Framework",
-  content: `
-# Building AI-First Organizations: A Leadership Framework
-
-In today's rapidly evolving technological landscape, artificial intelligence has become more than just a competitive advantage—it's a fundamental requirement for enterprise success. However, building an AI-first organization isn't just about adopting new technologies; it's about transforming how we think, work, and make decisions at every level of the organization.
-
-## The Mindset Shift
-
-The transition to an AI-first organization begins with a fundamental mindset shift. Traditional organizations are built around human decision-making processes, hierarchical structures, and linear workflows. AI-first organizations, on the other hand, are designed to leverage machine intelligence as a core component of their operational DNA.
-
-This doesn't mean replacing human judgment—quite the opposite. It means augmenting human intelligence with artificial intelligence to make better, faster, and more informed decisions. The key is finding the right balance between automation and human oversight.
-
-## Core Principles of AI-First Leadership
-
-### 1. Data-Driven Decision Making
-
-Every decision in an AI-first organization should be informed by data. This requires establishing robust data collection, processing, and analysis capabilities. Leaders must become comfortable with probabilistic thinking and be willing to act on insights derived from machine learning models.
-
-### 2. Continuous Learning and Adaptation
-
-AI systems improve through continuous learning, and so must AI-first organizations. This means creating feedback loops, embracing experimentation, and being willing to pivot quickly based on new information.
-
-### 3. Human-AI Collaboration
-
-The most successful AI implementations are those that amplify human capabilities rather than replace them entirely. Leaders must design workflows that optimize the collaboration between human intelligence and artificial intelligence.
-
-## Implementation Strategy
-
-Transforming an organization to become AI-first requires a systematic approach:
-
-### Phase 1: Foundation Building
-- Establish data infrastructure
-- Build AI literacy across the organization
-- Identify initial use cases and pilot projects
-
-### Phase 2: Pilot Implementation
-- Deploy AI solutions in controlled environments
-- Measure and optimize performance
-- Build confidence and expertise
-
-### Phase 3: Scale and Integration
-- Expand successful pilots across the organization
-- Integrate AI into core business processes
-- Develop proprietary AI capabilities
-
-## Challenges and Solutions
-
-Building AI-first organizations isn't without challenges. Common obstacles include:
-
-**Resistance to Change**: Address through education and demonstrating clear value
-**Data Quality Issues**: Invest in data governance and quality assurance processes
-**Talent Shortage**: Develop internal capabilities while partnering with external experts
-**Ethical Concerns**: Establish clear AI ethics guidelines and oversight mechanisms
-
-## Measuring Success
-
-Key metrics for AI-first transformation include:
-- Decision-making speed and accuracy
-- Operational efficiency improvements
-- Employee satisfaction and engagement
-- Customer experience enhancements
-- Revenue and cost impact
-
-## Conclusion
-
-Building an AI-first organization is a journey, not a destination. It requires sustained commitment, continuous learning, and the courage to challenge traditional ways of working. However, organizations that successfully make this transformation will be positioned to thrive in an increasingly AI-driven world.
-
-The future belongs to leaders who can effectively blend human wisdom with artificial intelligence to create organizations that are more efficient, more innovative, and more responsive to changing market conditions.
-  `,
-  excerpt: "How enterprise leaders can structure their organizations to leverage AI effectively while maintaining human-centered decision making and ethical considerations.",
-  slug: "ai-first-organizations-leadership-framework",
-  tags: ["AI", "Leadership"],
-  publishedAt: "2024-01-15",
-  readTime: "8 min",
-  author: "Seth Gagnon"
-};
+interface BlogPostData {
+  id: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  slug: string;
+  tags: string[];
+  created_at: string;
+  author_id: string;
+}
 
 const BlogPost = () => {
   const { slug } = useParams();
+  const [post, setPost] = useState<BlogPostData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const getTagColor = (tag: string) => {
+  useEffect(() => {
+    if (slug) {
+      fetchPost(slug);
+    }
+  }, [slug]);
+
+  const fetchPost = async (postSlug: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id, title, content, excerpt, slug, tags, created_at, author_id,
+          profiles(name)
+        `)
+        .eq('slug', postSlug)
+        .eq('status', 'published')
+        .single();
+
+      if (error || !data) {
+        setNotFound(true);
+        return;
+      }
+
+      setPost(data);
+    } catch (error) {
+      console.error('Error fetching post:', error);
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const wordCount = content ? content.split(/\s+/).length : 0;
+    return Math.ceil(wordCount / wordsPerMinute);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading post...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !post) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="py-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl font-bold text-foreground mb-4">Post Not Found</h1>
+            <p className="text-muted-foreground mb-8">
+              The blog post you're looking for doesn't exist or has been removed.
+            </p>
+            <Link to="/blog" className="btn-hero">
+              Back to Blog
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
     const colors = {
       'AI': 'bg-primary/10 text-primary border-primary/20',
       'Cloud': 'bg-accent/10 text-accent border-accent/20',
@@ -125,11 +129,11 @@ const BlogPost = () => {
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
                 <div className="flex items-center">
                   <User className="h-4 w-4 mr-1" />
-                  {blogPost.author}
+                  {post.profiles?.name || 'Anonymous'}
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
-                  {new Date(blogPost.publishedAt).toLocaleDateString('en-US', {
+                  {new Date(post.created_at).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric'
@@ -137,24 +141,24 @@ const BlogPost = () => {
                 </div>
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
-                  {blogPost.readTime}
+                  {calculateReadTime(post.content)} min read
                 </div>
               </div>
 
               {/* Title */}
               <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-                {blogPost.title}
+                {post.title}
               </h1>
 
               {/* Excerpt */}
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                {blogPost.excerpt}
+                {post.excerpt}
               </p>
 
               {/* Tags and Share */}
               <div className="flex flex-wrap items-center justify-between gap-4 pb-8 border-b border-border">
                 <div className="flex flex-wrap gap-2">
-                  {blogPost.tags.map((tag) => (
+                  {(post.tags || []).map((tag) => (
                     <span
                       key={tag}
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getTagColor(tag)}`}
@@ -177,7 +181,7 @@ const BlogPost = () => {
               <div 
                 className="text-foreground leading-relaxed"
                 dangerouslySetInnerHTML={{ 
-                  __html: blogPost.content
+                  __html: post.content
                     .split('\n')
                     .map(line => {
                       if (line.startsWith('# ')) {
@@ -204,7 +208,7 @@ const BlogPost = () => {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Written by {blogPost.author}
+                    Written by {post.profiles?.name || 'Anonymous'}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Technology executive specializing in AI strategy and cloud architecture

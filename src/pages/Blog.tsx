@@ -1,87 +1,85 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Tag, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
-// Mock blog data - in real app this would come from Supabase
-const allPosts = [
-  {
-    id: 1,
-    title: "Building AI-First Organizations: A Leadership Framework",
-    excerpt: "How enterprise leaders can structure their organizations to leverage AI effectively while maintaining human-centered decision making and ethical considerations.",
-    slug: "ai-first-organizations-leadership-framework",
-    tags: ["AI", "Leadership"],
-    publishedAt: "2024-01-15",
-    readTime: "8 min",
-    featured: true
-  },
-  {
-    id: 2,
-    title: "Cloud Migration Strategies for Enterprise Scale",
-    excerpt: "Proven methodologies for moving critical workloads to the cloud without disrupting business operations or compromising security.",
-    slug: "cloud-migration-strategies-enterprise",
-    tags: ["Cloud", "Strategy"],
-    publishedAt: "2024-01-10",
-    readTime: "12 min",
-    featured: true
-  },
-  {
-    id: 3,
-    title: "The Future of DevOps: AI-Powered Operations",
-    excerpt: "Exploring how artificial intelligence is revolutionizing DevOps practices and operational efficiency in modern software development.",
-    slug: "future-devops-ai-powered-operations",
-    tags: ["AI", "DevOps", "Cloud"],
-    publishedAt: "2024-01-05",
-    readTime: "10 min",
-    featured: false
-  },
-  {
-    id: 4,
-    title: "Leading Remote Engineering Teams",
-    excerpt: "Best practices for managing distributed engineering teams and maintaining productivity in remote and hybrid work environments.",
-    slug: "leading-remote-engineering-teams",
-    tags: ["Leadership", "Remote Work"],
-    publishedAt: "2024-01-01",
-    readTime: "6 min",
-    featured: false
-  },
-  {
-    id: 5,
-    title: "Kubernetes Security: Enterprise Best Practices",
-    excerpt: "Comprehensive security guidelines for running Kubernetes clusters in production enterprise environments with real-world examples.",
-    slug: "kubernetes-security-enterprise-practices",
-    tags: ["Cloud", "Security"],
-    publishedAt: "2023-12-28",
-    readTime: "15 min",
-    featured: false
-  },
-  {
-    id: 6,
-    title: "Building High-Performance Engineering Culture",
-    excerpt: "How to create an environment where engineering teams thrive and deliver exceptional results through psychological safety and clear goals.",
-    slug: "building-high-performance-engineering-culture",
-    tags: ["Leadership", "Culture"],
-    publishedAt: "2023-12-20",
-    readTime: "9 min",
-    featured: false
-  }
-];
-
-const allTags = ["AI", "Cloud", "Leadership", "DevOps", "Strategy", "Security", "Culture", "Remote Work"];
+interface Post {
+  id: string;
+  title: string;
+  excerpt: string;
+  slug: string;
+  tags: string[];
+  created_at: string;
+  status: string;
+}
 
 const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+    fetchTags();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('id, title, excerpt, slug, tags, created_at, status')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching posts:', error);
+        return;
+      }
+
+      setAllPosts(data || []);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .select('name')
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching tags:', error);
+        return;
+      }
+
+      setAllTags(data?.map(tag => tag.name) || []);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
 
   const filteredPosts = allPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTag = !selectedTag || post.tags.includes(selectedTag);
+                         (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTag = !selectedTag || post.tags?.includes(selectedTag);
     return matchesSearch && matchesTag;
   });
 
-  const featuredPosts = allPosts.filter(post => post.featured);
+  const featuredPosts = allPosts.slice(0, 2); // Show first 2 as featured
+
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const wordCount = content ? content.split(/\s+/).length : 100;
+    return Math.ceil(wordCount / wordsPerMinute);
+  };
 
   const getTagColor = (tag: string) => {
     const colors = {
@@ -115,10 +113,17 @@ const Blog = () => {
           </div>
         </section>
 
-        {/* Search and Filter */}
-        <section className="py-8 bg-muted/20 border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        {loading ? (
+          <div className="py-16 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading posts...</p>
+          </div>
+        ) : (
+          <>
+            {/* Search and Filter */}
+            <section className="py-8 bg-muted/20 border-b border-border">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               {/* Search */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -174,7 +179,7 @@ const Blog = () => {
                         <div className="flex items-center space-x-4">
                           <span className="flex items-center">
                             <Calendar className="h-4 w-4 mr-1" />
-                            {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                            {new Date(post.created_at).toLocaleDateString('en-US', {
                               month: 'long',
                               day: 'numeric',
                               year: 'numeric'
@@ -182,7 +187,7 @@ const Blog = () => {
                           </span>
                           <span className="flex items-center">
                             <Clock className="h-4 w-4 mr-1" />
-                            {post.readTime}
+                            {calculateReadTime(post.excerpt || '')} min
                           </span>
                         </div>
                       </div>
@@ -197,7 +202,7 @@ const Blog = () => {
 
                       <div className="flex items-center justify-between">
                         <div className="flex flex-wrap gap-2">
-                          {post.tags.map((tag) => (
+                          {(post.tags || []).map((tag) => (
                             <span
                               key={tag}
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTagColor(tag)}`}
@@ -253,14 +258,14 @@ const Blog = () => {
                       <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                         <span className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
-                          {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                          {new Date(post.created_at).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric'
                           })}
                         </span>
                         <span className="flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
-                          {post.readTime}
+                          {calculateReadTime(post.excerpt || '')} min
                         </span>
                       </div>
                       
@@ -274,7 +279,7 @@ const Blog = () => {
 
                       <div className="flex items-center justify-between pt-4 border-t border-border">
                         <div className="flex flex-wrap gap-1">
-                          {post.tags.slice(0, 2).map((tag) => (
+                          {(post.tags || []).slice(0, 2).map((tag) => (
                             <span
                               key={tag}
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTagColor(tag)}`}
@@ -282,9 +287,9 @@ const Blog = () => {
                               {tag}
                             </span>
                           ))}
-                          {post.tags.length > 2 && (
+                          {(post.tags || []).length > 2 && (
                             <span className="text-xs text-muted-foreground px-2 py-0.5">
-                              +{post.tags.length - 2}
+                              +{(post.tags || []).length - 2}
                             </span>
                           )}
                         </div>

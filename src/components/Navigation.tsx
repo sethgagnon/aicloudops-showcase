@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Cloud, Brain, Users } from 'lucide-react';
+import { Menu, X, Cloud, Brain, Users, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -51,6 +53,14 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            {user ? (
+              <Link to="/admin" className="btn-outline inline-flex items-center">
+                <User className="h-4 w-4 mr-2" />
+                Dashboard
+              </Link>
+            ) : (
+              <Link to="/auth" className="btn-outline">Login</Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
