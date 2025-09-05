@@ -61,6 +61,10 @@ const Hero = () => {
               </div>
             </div>
             
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary mb-2">50+</div>
+              <div className="text-muted-foreground">AI & Cloud Projects Delivered</div>
+            </div>
           </div>
         </div>
       </div>
