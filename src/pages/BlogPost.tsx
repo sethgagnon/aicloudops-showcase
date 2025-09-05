@@ -178,27 +178,8 @@ const BlogPost = () => {
             {/* Article Content */}
             <article className="prose prose-lg max-w-none">
               <div 
-                className="text-foreground leading-relaxed"
-                dangerouslySetInnerHTML={{ 
-                  __html: post.content
-                    .split('\n')
-                    .map(line => {
-                      if (line.startsWith('# ')) {
-                        return `<h1 class="text-3xl font-bold text-foreground mb-6 mt-12">${line.substring(2)}</h1>`;
-                      } else if (line.startsWith('## ')) {
-                        return `<h2 class="text-2xl font-bold text-foreground mb-4 mt-10">${line.substring(3)}</h2>`;
-                      } else if (line.startsWith('### ')) {
-                        return `<h3 class="text-xl font-semibold text-foreground mb-4 mt-8">${line.substring(4)}</h3>`;
-                      } else if (line.trim() === '') {
-                        return '<br />';
-                      } else if (line.startsWith('**') && line.endsWith('**')) {
-                        return `<p class="font-semibold text-foreground mb-4">${line.slice(2, -2)}</p>`;
-                      } else {
-                        return `<p class="text-muted-foreground mb-4 leading-relaxed">${line}</p>`;
-                      }
-                    })
-                    .join('')
-                }}
+                className="text-foreground leading-relaxed rich-content"
+                dangerouslySetInnerHTML={{ __html: post.content }}
               />
             </article>
 

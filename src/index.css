@@ -205,4 +205,82 @@
   .gradient-accent {
     background: var(--gradient-accent);
   }
+
+  /* Custom styles for rich text content */
+  .rich-content h1 {
+    @apply text-3xl font-bold text-foreground mb-6 mt-8 first:mt-0;
+  }
+
+  .rich-content h2 {
+    @apply text-2xl font-bold text-foreground mb-4 mt-6;
+  }
+
+  .rich-content h3 {
+    @apply text-xl font-semibold text-foreground mb-4 mt-6;
+  }
+
+  .rich-content p {
+    @apply text-muted-foreground mb-4 leading-relaxed;
+  }
+
+  .rich-content ul, .rich-content ol {
+    @apply mb-4 ml-6;
+  }
+
+  .rich-content li {
+    @apply text-muted-foreground mb-2;
+  }
+
+  .rich-content ul li {
+    @apply list-disc;
+  }
+
+  .rich-content ol li {
+    @apply list-decimal;
+  }
+
+  .rich-content blockquote {
+    @apply border-l-4 border-primary pl-4 italic text-muted-foreground my-6;
+  }
+
+  .rich-content code {
+    @apply bg-muted px-2 py-1 rounded text-sm font-mono;
+  }
+
+  .rich-content pre {
+    @apply bg-muted p-4 rounded-lg overflow-x-auto my-4;
+  }
+
+  .rich-content pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .rich-content img {
+    @apply rounded-lg max-w-full h-auto my-4 shadow-md;
+  }
+
+  .rich-content a {
+    @apply text-primary underline hover:text-primary-glow transition-colors;
+  }
+
+  .rich-content strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .rich-content em {
+    @apply italic;
+  }
+
+  /* TipTap editor specific styles */
+  .ProseMirror {
+    outline: none;
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+    height: 0;
+  }
 }

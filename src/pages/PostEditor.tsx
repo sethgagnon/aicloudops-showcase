@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 interface PostData {
   title: string;
@@ -306,16 +307,15 @@ const PostEditor = () => {
             {/* Content */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Content (Markdown supported)
+                Content
               </label>
-              <Textarea
-                placeholder="Write your post content here... You can use Markdown formatting."
-                value={post.content}
-                onChange={(e) => setPost({ ...post, content: e.target.value })}
-                className="min-h-[500px] resize-none font-mono"
+              <RichTextEditor
+                content={post.content}
+                onChange={(content) => setPost({ ...post, content })}
+                placeholder="Start writing your post content here..."
               />
               <p className="text-sm text-muted-foreground mt-2">
-                Tip: Use Markdown syntax like **bold**, *italic*, # headings, etc.
+                Use the toolbar above to format your text, add images, and create rich content.
               </p>
             </div>
           </div>
