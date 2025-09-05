@@ -33,7 +33,7 @@ const Footer = () => {
       links: [
         { name: 'Blog', href: '/blog' },
         
-        { name: 'Media Kit', href: '/about#media' }
+        
       ]
     },
     {
