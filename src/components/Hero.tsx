@@ -44,10 +44,19 @@ const Hero = () => {
               <div className="text-muted-foreground">Years in Technology</div>
             </div>
             <div className="text-center">
-              <div className="flex justify-center items-center gap-3 mb-2">
-                <Cloud className="h-8 w-8 text-primary" />
-                <Server className="h-8 w-8 text-primary" />
-                <Database className="h-8 w-8 text-primary" />
+              <div className="flex justify-center items-center gap-6 mb-2">
+                <div className="flex flex-col items-center gap-1">
+                  <Cloud className="h-8 w-8 text-primary" />
+                  <span className="text-xs text-muted-foreground">AWS</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <Server className="h-8 w-8 text-primary" />
+                  <span className="text-xs text-muted-foreground">Azure</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <Database className="h-8 w-8 text-primary" />
+                  <span className="text-xs text-muted-foreground">GCP</span>
+                </div>
               </div>
               <div className="text-muted-foreground">Cloud Platforms</div>
             </div>
