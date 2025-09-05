@@ -3,6 +3,7 @@ import { Mail, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -24,17 +25,38 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission - in real app this would connect to Supabase
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const { error: insertError } = await supabase
+        .from('contacts')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            topic: formData.topic,
+            message: formData.message,
+          },
+        ]);
+
+      if (insertError) throw insertError;
+
+      // Send notifications (owner + confirmation)
+      await supabase.functions.invoke('contact-notify', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          topic: formData.topic,
+          message: formData.message,
+        },
+      });
+
       toast({
         title: "Message sent successfully!",
         description: "Thank you for reaching out. I'll get back to you within 24 hours.",
       });
-      
+
       setFormData({ name: '', email: '', topic: '', message: '' });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Contact submit error:', error);
       toast({
         title: "Error sending message",
         description: "Please try again or contact me directly via email.",
