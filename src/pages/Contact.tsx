@@ -4,6 +4,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import SEO from '@/components/SEO';
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -66,7 +67,34 @@ const Contact = () => {
       [e.target.name]: e.target.value
     }));
   };
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact Seth Gagnon",
+    "description": "Get in touch with Seth Gagnon for AI leadership consulting, cloud strategy, and engineering management opportunities.",
+    "url": "https://aicloudops.tech/contact",
+    "mainEntity": {
+      "@type": "Person",
+      "name": "Seth Gagnon",
+      "email": "sethgagnon@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Boston Area",
+        "addressRegion": "MA",
+        "addressCountry": "US"
+      }
+    }
+  };
+
   return <div className="min-h-screen bg-background">
+      <SEO 
+        title="Contact Seth Gagnon - AI Leadership & Cloud Strategy Consulting"
+        description="Contact Seth Gagnon for strategic insights, collaboration opportunities, and consulting on AI leadership, cloud architecture, and digital transformation projects."
+        keywords="contact Seth Gagnon, AI consulting, cloud strategy consulting, engineering leadership, digital transformation, technology consulting"
+        canonical="https://aicloudops.tech/contact"
+        structuredData={structuredData}
+      />
       <Navigation />
       
       <main>

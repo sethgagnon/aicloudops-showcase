@@ -5,6 +5,7 @@ import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 interface BlogPostData {
   id: string;
@@ -105,8 +106,41 @@ const BlogPost = () => {
 
   const sanitizedContent = DOMPurify.sanitize(post.content);
 
+  // Create structured data for the blog post
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.title,
+    "description": post.excerpt,
+    "author": {
+      "@type": "Person",
+      "name": "Seth Gagnon",
+      "url": "https://aicloudops.tech/about"
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Seth Gagnon",
+      "url": "https://aicloudops.tech"
+    },
+    "datePublished": post.created_at,
+    "dateModified": post.created_at,
+    "url": `https://aicloudops.tech/blog/${post.slug}`,
+    "keywords": post.tags?.join(", "),
+    "wordCount": post.content ? post.content.split(/\s+/).length : 0,
+    "timeRequired": `PT${calculateReadTime(post.content)}M`,
+    "articleSection": "Technology"
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title={`${post.title} | Seth Gagnon - AI Cloud Ops`}
+        description={post.excerpt}
+        keywords={`${post.tags?.join(", ")}, Seth Gagnon, AI leadership, cloud strategy`}
+        canonical={`https://aicloudops.tech/blog/${post.slug}`}
+        ogType="article"
+        structuredData={structuredData}
+      />
       <Navigation />
       
       <main>

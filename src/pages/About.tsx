@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import ProfileImageUpload from '@/components/ProfileImageUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import SEO from '@/components/SEO';
 const About = () => {
   const { user } = useAuth();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
@@ -46,7 +47,70 @@ const About = () => {
     category: 'DevOps & Architecture',
     items: ['CI/CD', 'Infrastructure as Code', 'Microservices', 'Security']
   }];
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Seth Gagnon",
+    "jobTitle": "Cloud Engineering Director",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Evernorth Health Services"
+    },
+    "owns": {
+      "@type": "Organization",
+      "name": "CloudTech LLC"
+    },
+    "url": "https://aicloudops.tech/about",
+    "sameAs": [
+      "https://www.linkedin.com/in/sethgagnon/"
+    ],
+    "knowsAbout": [
+      "AI Strategy",
+      "MLOps", 
+      "Data Architecture",
+      "LLM Integration",
+      "AWS",
+      "Azure",
+      "GCP",
+      "Kubernetes",
+      "Terraform",
+      "Team Building",
+      "Agile Management",
+      "Strategic Planning",
+      "CI/CD",
+      "Infrastructure as Code",
+      "Microservices"
+    ],
+    "hasOccupation": {
+      "@type": "Occupation",
+      "name": "Cloud Engineering Director",
+      "occupationLocation": {
+        "@type": "City",
+        "name": "Boston Area"
+      }
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "North Andover",
+      "addressRegion": "MA",
+      "addressCountry": "US"
+    },
+    "alumniOf": {
+      "@type": "Organization",
+      "name": "Technology Industry"
+    }
+  };
+
   return <div className="min-h-screen bg-background">
+      <SEO 
+        title="About Seth Gagnon - Cloud Engineering Director & AI Leadership Expert"
+        description="Meet Seth Gagnon, Cloud Engineering Director at Evernorth Health Services and owner of CloudTech LLC. 20+ years experience in AI, cloud platforms (AWS, Azure, GCP), and engineering leadership."
+        keywords="Seth Gagnon, Cloud Engineering Director, Evernorth Health Services, CloudTech LLC, AI leadership, cloud platforms, AWS, Azure, GCP, engineering management"
+        canonical="https://aicloudops.tech/about"
+        ogType="profile"
+        structuredData={structuredData}
+      />
       <Navigation />
       
       <main>

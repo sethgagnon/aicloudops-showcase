@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 interface Post {
   id: string;
   title: string;
@@ -82,7 +83,50 @@ const Blog = () => {
     };
     return colors[tag as keyof typeof colors] || 'bg-muted text-muted-foreground border-border';
   };
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "AI Cloud Ops Blog",
+    "description": "Expert insights on AI leadership, cloud architecture, and engineering team management from Seth Gagnon.",
+    "url": "https://aicloudops.tech/blog",
+    "author": {
+      "@type": "Person",
+      "name": "Seth Gagnon"
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Seth Gagnon"
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEO 
+          title="Blog - AI Leadership & Cloud Strategy Insights | Seth Gagnon"
+          description="Read expert insights on AI leadership, cloud architecture, digital transformation, and engineering management from technology executive Seth Gagnon."
+          keywords="AI blog, cloud strategy blog, engineering leadership, digital transformation insights, Seth Gagnon blog"
+          canonical="https://aicloudops.tech/blog"
+          structuredData={structuredData}
+        />
+        <Navigation />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return <div className="min-h-screen bg-background">
+      <SEO 
+        title="Blog - AI Leadership & Cloud Strategy Insights | Seth Gagnon"
+        description="Read expert insights on AI leadership, cloud architecture, digital transformation, and engineering management from technology executive Seth Gagnon."
+        keywords="AI blog, cloud strategy blog, engineering leadership, digital transformation insights, Seth Gagnon blog"
+        canonical="https://aicloudops.tech/blog"
+        structuredData={structuredData}
+      />
       <Navigation />
       
       <main>
