@@ -1,7 +1,38 @@
+import { useState, useEffect } from 'react';
 import { Download, ExternalLink, Award, Users, Briefcase, GraduationCap } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import ProfileImageUpload from '@/components/ProfileImageUpload';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 const About = () => {
+  const { user } = useAuth();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (user) {
+      fetchProfileImage();
+    }
+  }, [user]);
+
+  const fetchProfileImage = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (data?.avatar_url) {
+      setProfileImageUrl(data.avatar_url);
+    }
+  };
+
+  const handleImageUpdate = (imageUrl: string) => {
+    setProfileImageUrl(imageUrl);
+  };
+
   const skills = [{
     category: 'AI & Machine Learning',
     items: ['AI Strategy', 'MLOps', 'Data Architecture', 'LLM Integration']
@@ -32,12 +63,11 @@ const About = () => {
               </p>
             </div>
 
-            {/* Profile Image Placeholder */}
-            <div className="flex justify-center mb-16">
-              <div className="w-64 h-64 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center">
-                <div className="text-6xl font-bold text-primary/60">SG</div>
-              </div>
-            </div>
+            {/* Profile Image Upload */}
+            <ProfileImageUpload 
+              currentImageUrl={profileImageUrl}
+              onImageUpdate={handleImageUpdate}
+            />
           </div>
         </section>
 
