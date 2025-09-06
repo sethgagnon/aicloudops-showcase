@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Tag, Calendar, Clock, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -20,10 +21,19 @@ const Blog = () => {
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   useEffect(() => {
-    fetchPosts();
-    fetchTags();
-  }, []);
+    if (!authLoading && !user) {
+      navigate('/auth?return=/blog');
+      return;
+    }
+    
+    if (user) {
+      fetchPosts();
+      fetchTags();
+    }
+  }, [user, authLoading, navigate]);
   const fetchPosts = async () => {
     try {
       const {
@@ -100,7 +110,7 @@ const Blog = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
         <SEO 

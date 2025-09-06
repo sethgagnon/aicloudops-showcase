@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -13,9 +13,17 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('return') || '/admin';
+
+  useEffect(() => {
+    if (user) {
+      navigate(returnUrl);
+    }
+  }, [user, navigate, returnUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +57,7 @@ const Auth = () => {
             title: "Welcome back!",
             description: "You've successfully signed in."
           });
-          navigate('/admin');
+          navigate(returnUrl);
         }
       }
     } catch (error: any) {
@@ -83,12 +91,12 @@ const Auth = () => {
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {isSignUp ? 'Create Account' : 'Welcome Back'}
               </h1>
-              <p className="text-muted-foreground">
-                {isSignUp 
-                  ? 'Sign up to access the admin dashboard and start writing' 
-                  : 'Sign in to manage your blog posts and content'
-                }
-              </p>
+               <p className="text-muted-foreground">
+                 {isSignUp 
+                   ? 'Create an account to access our premium blog content' 
+                   : 'Sign in to continue reading'
+                 }
+               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">

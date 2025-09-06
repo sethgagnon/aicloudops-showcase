@@ -1,8 +1,9 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, ArrowLeft, Share2, Tag, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -23,12 +24,19 @@ const BlogPost = () => {
   const [post, setPost] = useState<BlogPostData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (slug) {
+    if (!authLoading && !user) {
+      navigate(`/auth?return=/blog/${slug}`);
+      return;
+    }
+    
+    if (user && slug) {
       fetchPost(slug);
     }
-  }, [slug]);
+  }, [slug, user, authLoading, navigate]);
 
   const fetchPost = async (postSlug: string) => {
     try {
@@ -73,7 +81,7 @@ const BlogPost = () => {
     return colors[tag as keyof typeof colors] || 'bg-muted text-muted-foreground border-border';
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
