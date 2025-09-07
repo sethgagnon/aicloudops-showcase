@@ -47,7 +47,10 @@ const WordPressImport = () => {
   const cleanContent = (content: string) => {
     // Remove WordPress shortcodes, then sanitize HTML thoroughly
     const noShortcodes = content.replace(/\[\/?\w+[^\]]*\]/g, '').trim();
-    return DOMPurify.sanitize(noShortcodes);
+    return DOMPurify.sanitize(noShortcodes, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'],
+      ALLOWED_ATTR: []
+    });
   };
 
   const generateSlug = (title: string, originalSlug: string) => {

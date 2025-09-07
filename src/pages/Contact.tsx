@@ -19,26 +19,49 @@ const Contact = () => {
   const topics = ['General Inquiry', 'Consulting Opportunity', 'Other'];
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Input validation and sanitization
+    const sanitizedData = {
+      name: formData.name.trim().slice(0, 100),
+      email: formData.email.trim().toLowerCase().slice(0, 255),
+      topic: formData.topic.trim().slice(0, 100),
+      message: formData.message.trim().slice(0, 2000)
+    };
+
+    // Additional validation
+    if (!sanitizedData.name || !sanitizedData.email || !sanitizedData.message) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Prevent potential email injection
+    if (sanitizedData.name.includes('\n') || sanitizedData.name.includes('\r') || 
+        sanitizedData.email.includes('\n') || sanitizedData.email.includes('\r') ||
+        sanitizedData.topic.includes('\n') || sanitizedData.topic.includes('\r')) {
+      toast({
+        title: "Invalid Input",
+        description: "Invalid characters detected in form data.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const {
         error: insertError
-      } = await supabase.from('contacts').insert([{
-        name: formData.name,
-        email: formData.email,
-        topic: formData.topic,
-        message: formData.message
-      }]);
+      } = await supabase.from('contacts').insert([sanitizedData]);
       if (insertError) throw insertError;
 
       // Send notifications (owner + confirmation)
       await supabase.functions.invoke('contact-notify', {
-        body: {
-          name: formData.name,
-          email: formData.email,
-          topic: formData.topic,
-          message: formData.message
-        }
+        body: sanitizedData
       });
       toast({
         title: "Message sent successfully!",
@@ -188,14 +211,14 @@ const Contact = () => {
                     <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                       Full Name *
                     </label>
-                    <input type="text" id="name" name="name" required value={formData.name} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300" placeholder="Your full name" />
+                    <input type="text" id="name" name="name" required maxLength={100} value={formData.name} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300" placeholder="Your full name" />
                   </div>
 
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                       Email Address *
                     </label>
-                    <input type="email" id="email" name="email" required value={formData.email} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300" placeholder="your.email@company.com" />
+                    <input type="email" id="email" name="email" required maxLength={255} value={formData.email} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300" placeholder="your.email@company.com" />
                   </div>
 
                   <div>
@@ -214,7 +237,7 @@ const Contact = () => {
                     <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
                       Message *
                     </label>
-                    <textarea id="message" name="message" required rows={6} value={formData.message} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 resize-none" placeholder="Tell me about your project or how I can help..." />
+                    <textarea id="message" name="message" required rows={6} maxLength={2000} value={formData.message} onChange={handleChange} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 resize-none" placeholder="Tell me about your project or how I can help..." />
                   </div>
 
                   <button type="submit" disabled={isSubmitting} className="w-full btn-hero disabled:opacity-50 disabled:cursor-not-allowed">
