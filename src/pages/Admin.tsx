@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, LogOut } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +26,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,6 +38,19 @@ const Admin = () => {
     if (user) {
       fetchPosts();
     }
+  }, [user]);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) return;
+      try {
+        const { data } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+        setIsAdmin(!!data);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    if (user) checkAdmin();
   }, [user]);
 
   const fetchPosts = async () => {
@@ -145,6 +159,15 @@ const Admin = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 New Post
               </button>
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin/users')}
+                  className="btn-outline inline-flex items-center"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Users
+                </button>
+              )}
               <button
                 onClick={handleSignOut}
                 className="btn-outline inline-flex items-center"
