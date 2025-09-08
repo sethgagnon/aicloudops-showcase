@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
+import Youtube from '@tiptap/extension-youtube';
 import { 
   Bold, 
   Italic, 
@@ -25,7 +26,8 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
-  Palette
+  Palette,
+  Video
 } from 'lucide-react';
 import { useRef, useEffect } from 'react';
 import { useImageUpload } from '@/hooks/useImageUpload';
@@ -64,6 +66,15 @@ export const RichTextEditor = ({ content, onChange, placeholder = "Start writing
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
+      }),
+      Youtube.configure({
+        width: 640,
+        height: 480,
+        ccLanguage: 'en',
+        interfaceLanguage: 'en',
+        HTMLAttributes: {
+          class: 'rounded-lg my-4 max-w-full',
+        },
       }),
       Color,
       TextStyle,
@@ -114,6 +125,27 @@ export const RichTextEditor = ({ content, onChange, placeholder = "Start writing
     const color = window.prompt('Enter color (hex, rgb, or named):');
     if (color && editor) {
       editor.chain().focus().setColor(color).run();
+    }
+  };
+
+  const addVideo = () => {
+    const url = window.prompt('Enter YouTube URL:');
+    if (url && editor) {
+      // Extract video ID from various YouTube URL formats
+      const videoIdMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+      if (videoIdMatch) {
+        editor.chain().focus().setYoutubeVideo({
+          src: url,
+          width: 640,
+          height: 480,
+        }).run();
+      } else {
+        toast({
+          title: "Invalid YouTube URL",
+          description: "Please enter a valid YouTube URL",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -317,6 +349,13 @@ export const RichTextEditor = ({ content, onChange, placeholder = "Start writing
           title="Insert Link"
         >
           <LinkIcon className="h-4 w-4" />
+        </button>
+        <button
+          onClick={addVideo}
+          className="p-2 rounded hover:bg-muted"
+          title="Insert YouTube Video"
+        >
+          <Video className="h-4 w-4" />
         </button>
 
         <input
