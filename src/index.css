@@ -259,6 +259,13 @@
     @apply rounded-lg max-w-full h-auto my-4 shadow-md;
   }
 
+  .rich-content iframe {
+    @apply rounded-lg max-w-full my-4 shadow-md;
+    aspect-ratio: 16/9;
+    width: 100%;
+    height: auto;
+  }
+
   .rich-content a {
     @apply text-primary underline hover:text-primary-glow transition-colors;
   }
