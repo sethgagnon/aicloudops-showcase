@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut } from 'lucide-react';
+import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -288,6 +289,12 @@ const Admin = () => {
                             <Clock className="h-4 w-4 mr-1" />
                             Updated {new Date(post.updated_at).toLocaleDateString()}
                           </span>
+                          {post.status === 'scheduled' && post.scheduled_at && (
+                            <span className="flex items-center text-blue-600">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              Scheduled: {format(new Date(post.scheduled_at), "MMM d, yyyy 'at' h:mm a")}
+                            </span>
+                          )}
                           {post.tags.length > 0 && (
                             <span className="flex items-center">
                               <TagIcon className="h-4 w-4 mr-1" />
