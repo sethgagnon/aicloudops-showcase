@@ -1,10 +1,12 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, ArrowLeft, Share2, Tag, User } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, Share2, Tag, User, Copy, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -25,6 +27,7 @@ const BlogPost = () => {
   const [post, setPost] = useState<BlogPostData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -83,34 +86,26 @@ const BlogPost = () => {
     return colors[tag as keyof typeof colors] || 'bg-muted text-muted-foreground border-border';
   };
 
-  const handleShare = async () => {
-    const shareData = {
-      title: post?.title || '',
-      text: post?.excerpt || '',
-      url: window.location.href,
-    };
+  const getShareData = () => {
+    const url = window.location.href;
+    const title = post?.title || '';
+    const description = post?.excerpt || '';
+    return { url, title, description };
+  };
 
+  const copyToClipboard = async () => {
+    const { url } = getShareData();
     try {
-      // Try using the native Web Share API first
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        return;
-      }
-    } catch (error) {
-      console.log('Web Share API not supported or failed, falling back to clipboard');
-    }
-
-    // Fallback: Copy URL to clipboard
-    try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(url);
       toast({
         title: "Link copied!",
         description: "The article URL has been copied to your clipboard.",
       });
+      setShareOpen(false);
     } catch (error) {
-      // Final fallback for older browsers
+      // Fallback for older browsers
       const textArea = document.createElement('textarea');
-      textArea.value = window.location.href;
+      textArea.value = url;
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
@@ -120,16 +115,79 @@ const BlogPost = () => {
           title: "Link copied!",
           description: "The article URL has been copied to your clipboard.",
         });
+        setShareOpen(false);
       } catch (err) {
         toast({
-          title: "Share failed",
-          description: "Unable to share or copy the link. Please copy the URL manually.",
+          title: "Copy failed",
+          description: "Unable to copy the link. Please copy the URL manually.",
           variant: "destructive"
         });
       }
       document.body.removeChild(textArea);
     }
   };
+
+  const shareToSocialMedia = (platform: string) => {
+    const { url, title, description } = getShareData();
+    const encodedUrl = encodeURIComponent(url);
+    const encodedTitle = encodeURIComponent(title);
+    const encodedDescription = encodeURIComponent(description);
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+        break;
+      case 'reddit':
+        shareUrl = `https://reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`;
+        break;
+      case 'email':
+        shareUrl = `mailto:?subject=${encodedTitle}&body=${encodedDescription}%0A%0A${encodedUrl}`;
+        break;
+      default:
+        return;
+    }
+    
+    if (platform === 'email') {
+      window.location.href = shareUrl;
+    } else {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+    setShareOpen(false);
+  };
+
+  const handleNativeShare = async () => {
+    const { url, title, description } = getShareData();
+    const shareData = { title, text: description, url };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        setShareOpen(false);
+        return;
+      }
+    } catch (error) {
+      console.log('Web Share API failed, showing platform options');
+    }
+    
+    // If native share is not available, we'll show the popover with platform options
+    setShareOpen(true);
+  };
+
+  const shareOptions = [
+    { name: 'LinkedIn', key: 'linkedin', color: 'text-blue-600', bgColor: 'hover:bg-blue-50' },
+    { name: 'Facebook', key: 'facebook', color: 'text-blue-800', bgColor: 'hover:bg-blue-50' },
+    { name: 'Twitter', key: 'twitter', color: 'text-sky-500', bgColor: 'hover:bg-sky-50' },
+    { name: 'Reddit', key: 'reddit', color: 'text-orange-600', bgColor: 'hover:bg-orange-50' },
+    { name: 'Email', key: 'email', color: 'text-gray-600', bgColor: 'hover:bg-gray-50' },
+  ];
 
   if (authLoading || loading) {
     return (
@@ -263,13 +321,45 @@ const BlogPost = () => {
                   ))}
                 </div>
                 
-                <button 
-                  onClick={handleShare}
-                  className="btn-outline inline-flex items-center"
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share Article
-                </button>
+                
+                <Popover open={shareOpen} onOpenChange={setShareOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={handleNativeShare}
+                      className="inline-flex items-center"
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share Article
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-2" align="end">
+                    <div className="space-y-1">
+                      <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                        Share this article
+                      </div>
+                      {shareOptions.map((option) => (
+                        <button
+                          key={option.key}
+                          onClick={() => shareToSocialMedia(option.key)}
+                          className={`w-full flex items-center px-2 py-2 text-sm rounded-md transition-colors ${option.bgColor} ${option.color}`}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          {option.name}
+                        </button>
+                      ))}
+                      <div className="border-t border-border mt-1 pt-1">
+                        <button
+                          onClick={copyToClipboard}
+                          className="w-full flex items-center px-2 py-2 text-sm rounded-md transition-colors hover:bg-muted text-foreground"
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Link
+                        </button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </header>
 
@@ -294,13 +384,40 @@ const BlogPost = () => {
                 </div>
                 
                 <div className="flex gap-2">
-                  <button 
-                    onClick={handleShare}
-                    className="btn-outline"
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline">
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-56 p-2" align="end">
+                      <div className="space-y-1">
+                        <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                          Share this article
+                        </div>
+                        {shareOptions.map((option) => (
+                          <button
+                            key={option.key}
+                            onClick={() => shareToSocialMedia(option.key)}
+                            className={`w-full flex items-center px-2 py-2 text-sm rounded-md transition-colors ${option.bgColor} ${option.color}`}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            {option.name}
+                          </button>
+                        ))}
+                        <div className="border-t border-border mt-1 pt-1">
+                          <button
+                            onClick={copyToClipboard}
+                            className="w-full flex items-center px-2 py-2 text-sm rounded-md transition-colors hover:bg-muted text-foreground"
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy Link
+                          </button>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Link to="/contact" className="btn-secondary">
                     Contact Author
                   </Link>
