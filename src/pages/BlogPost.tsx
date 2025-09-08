@@ -220,7 +220,11 @@ const BlogPost = () => {
     );
   }
 
-  const sanitizedContent = DOMPurify.sanitize(post.content);
+  const sanitizedContent = DOMPurify.sanitize(post.content, {
+    ADD_TAGS: ['iframe'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'width', 'height', 'autoplay', 'cclanguage', 'disablekbcontrols', 'enableiframeapi', 'endtime', 'interfacelanguage', 'ivloadpolicy', 'loop', 'modestbranding', 'origin', 'playlist', 'rel', 'start'],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|xxx|youtube):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+  });
 
   // Create structured data for the blog post
   const structuredData = {
