@@ -50,6 +50,7 @@ export const RichTextEditor = ({ content, onChange, placeholder = "Start writing
         heading: {
           levels: [1, 2, 3],
         },
+        link: false, // Disable StarterKit's link to avoid conflicts
       }),
       Image.configure({
         inline: false,
