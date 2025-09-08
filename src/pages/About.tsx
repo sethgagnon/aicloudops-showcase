@@ -130,7 +130,6 @@ const About = () => {
             {/* Profile Image Upload */}
             <ProfileImageUpload 
               currentImageUrl={profileImageUrl}
-              onImageUpdate={handleImageUpdate}
             />
           </div>
         </section>
