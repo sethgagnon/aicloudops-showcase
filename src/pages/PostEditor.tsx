@@ -299,8 +299,19 @@ const PostEditor = () => {
               
               <Button
                 variant="outline"
-                onClick={() => savePost('scheduled')}
-                disabled={loading || post.status !== 'scheduled' || !post.scheduled_at}
+                onClick={() => {
+                  if (!post.scheduled_at) {
+                    toast({
+                      title: "Schedule date required",
+                      description: "Please select a date and time to schedule your post.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  setPost(prev => ({ ...prev, status: 'scheduled' }));
+                  savePost('scheduled');
+                }}
+                disabled={loading || !post.scheduled_at}
               >
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule
