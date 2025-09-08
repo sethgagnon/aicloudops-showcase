@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -25,6 +26,7 @@ const BlogPost = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,6 +81,54 @@ const BlogPost = () => {
       'Remote Work': 'bg-accent-soft/20 text-accent border-accent/20'
     };
     return colors[tag as keyof typeof colors] || 'bg-muted text-muted-foreground border-border';
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: post?.title || '',
+      text: post?.excerpt || '',
+      url: window.location.href,
+    };
+
+    try {
+      // Try using the native Web Share API first
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch (error) {
+      console.log('Web Share API not supported or failed, falling back to clipboard');
+    }
+
+    // Fallback: Copy URL to clipboard
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "The article URL has been copied to your clipboard.",
+      });
+    } catch (error) {
+      // Final fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast({
+          title: "Link copied!",
+          description: "The article URL has been copied to your clipboard.",
+        });
+      } catch (err) {
+        toast({
+          title: "Share failed",
+          description: "Unable to share or copy the link. Please copy the URL manually.",
+          variant: "destructive"
+        });
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   if (authLoading || loading) {
@@ -213,7 +263,10 @@ const BlogPost = () => {
                   ))}
                 </div>
                 
-                <button className="btn-outline inline-flex items-center">
+                <button 
+                  onClick={handleShare}
+                  className="btn-outline inline-flex items-center"
+                >
                   <Share2 className="h-4 w-4 mr-2" />
                   Share Article
                 </button>
@@ -241,7 +294,10 @@ const BlogPost = () => {
                 </div>
                 
                 <div className="flex gap-2">
-                  <button className="btn-outline">
+                  <button 
+                    onClick={handleShare}
+                    className="btn-outline"
+                  >
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
                   </button>
