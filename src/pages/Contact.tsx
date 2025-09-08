@@ -19,7 +19,7 @@ const Contact = () => {
   const topics = ['General Inquiry', 'Consulting Opportunity', 'Other'];
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Input validation and sanitization
     const sanitizedData = {
       name: formData.name.trim().slice(0, 100),
@@ -40,9 +40,7 @@ const Contact = () => {
     }
 
     // Prevent potential email injection
-    if (sanitizedData.name.includes('\n') || sanitizedData.name.includes('\r') || 
-        sanitizedData.email.includes('\n') || sanitizedData.email.includes('\r') ||
-        sanitizedData.topic.includes('\n') || sanitizedData.topic.includes('\r')) {
+    if (sanitizedData.name.includes('\n') || sanitizedData.name.includes('\r') || sanitizedData.email.includes('\n') || sanitizedData.email.includes('\r') || sanitizedData.topic.includes('\n') || sanitizedData.topic.includes('\r')) {
       toast({
         title: "Invalid Input",
         description: "Invalid characters detected in form data.",
@@ -51,7 +49,6 @@ const Contact = () => {
       setIsSubmitting(false);
       return;
     }
-
     setIsSubmitting(true);
     try {
       const {
@@ -90,7 +87,6 @@ const Contact = () => {
       [e.target.name]: e.target.value
     }));
   };
-
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
@@ -109,15 +105,8 @@ const Contact = () => {
       }
     }
   };
-
   return <div className="min-h-screen bg-background">
-      <SEO 
-        title="Contact Seth Gagnon - AI Leadership & Cloud Strategy Consulting"
-        description="Contact Seth Gagnon for strategic insights, collaboration opportunities, and consulting on AI leadership, cloud architecture, and digital transformation projects."
-        keywords="contact Seth Gagnon, AI consulting, cloud strategy consulting, engineering leadership, digital transformation, technology consulting"
-        canonical="https://aicloudops.tech/contact"
-        structuredData={structuredData}
-      />
+      <SEO title="Contact Seth Gagnon - AI Leadership & Cloud Strategy Consulting" description="Contact Seth Gagnon for strategic insights, collaboration opportunities, and consulting on AI leadership, cloud architecture, and digital transformation projects." keywords="contact Seth Gagnon, AI consulting, cloud strategy consulting, engineering leadership, digital transformation, technology consulting" canonical="https://aicloudops.tech/contact" structuredData={structuredData} />
       <Navigation />
       
       <main>
@@ -179,7 +168,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Response Time</h3>
                       <p className="text-muted-foreground">Within 24 hours</p>
-                      <p className="text-sm text-muted-foreground">Monday - Friday, 9 AM - 6 PM PST</p>
+                      <p className="text-sm text-muted-foreground">Monday - Friday, 9 AM - 6 PM EST</p>
                     </div>
                   </div>
                 </div>
