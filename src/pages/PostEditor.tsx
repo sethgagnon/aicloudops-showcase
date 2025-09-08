@@ -211,14 +211,19 @@ const PostEditor = () => {
     }
   };
 
-  const handleAIContentGenerated = (aiContent: any) => {
+  const handleAIContentGenerated = async (aiContent: any) => {
     setPost(prev => ({
       ...prev,
-      title: prev.title || aiContent.title,
-      excerpt: prev.excerpt || aiContent.excerpt,
-      content: prev.content || aiContent.content,
+      title: aiContent.title,
+      excerpt: aiContent.excerpt,
+      content: aiContent.content,
       tags: [...new Set([...prev.tags, ...aiContent.tags])], // Merge tags without duplicates
     }));
+    
+    // Auto-save as draft after AI content generation
+    setTimeout(() => {
+      savePost('draft');
+    }, 100);
   };
 
   if (authLoading || loading) {
