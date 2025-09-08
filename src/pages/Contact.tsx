@@ -168,7 +168,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Response Time</h3>
                       <p className="text-muted-foreground">Within 24 hours</p>
-                      <p className="text-sm text-muted-foreground">Monday - Friday, 9 AM - 6 PM EST</p>
+                      <p className="text-sm text-muted-foreground">Monday - Friday, 9 AM - 5 PM EST</p>
                     </div>
                   </div>
                 </div>
