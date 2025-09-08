@@ -91,9 +91,13 @@ const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }: ProfileImageUplo
             decoding="async"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-            <div className="text-6xl font-bold text-primary/60">SG</div>
-          </div>
+          <img
+            src="/lovable-uploads/3b57f5eb-3edf-4e7f-a4e4-293cae6f4e56.png"
+            alt="Seth Gagnon - Professional headshot photo"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
         )}
         
         {/* Overlay for upload */}
@@ -119,17 +123,6 @@ const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }: ProfileImageUplo
           </Button>
         </div>
         
-        {/* Upload instructions when no image */}
-        {!currentImageUrl && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center p-4">
-              <Upload className="h-8 w-8 text-primary/60 mx-auto mb-2" />
-              <p className="text-sm text-primary/60">
-                {user ? 'Click or drag to upload' : 'Sign in to upload photo'}
-              </p>
-            </div>
-          </div>
-        )}
         
         <input
           ref={fileInputRef}
