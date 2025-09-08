@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Eye, Calendar, Tag as TagIcon, X, CalendarIcon, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Send, Tag as TagIcon, X, CalendarIcon, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import AIAssistant from '@/components/AIAssistant';
+import { PublishDialog } from '@/components/PublishDialog';
 
 interface PostData {
   title: string;
@@ -40,6 +41,7 @@ const PostEditor = () => {
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -298,32 +300,12 @@ const PostEditor = () => {
               </Button>
               
               <Button
-                variant="outline"
-                onClick={() => {
-                  if (!post.scheduled_at) {
-                    toast({
-                      title: "Schedule date required",
-                      description: "Please select a date and time to schedule your post.",
-                      variant: "destructive"
-                    });
-                    return;
-                  }
-                  setPost(prev => ({ ...prev, status: 'scheduled' }));
-                  savePost('scheduled');
-                }}
-                disabled={loading || !post.scheduled_at}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule
-              </Button>
-              
-              <Button
-                onClick={() => savePost('published')}
+                onClick={() => setPublishDialogOpen(true)}
                 disabled={loading}
                 className="bg-primary hover:bg-primary/90"
               >
-                <Eye className="h-4 w-4 mr-2" />
-                Publish Now
+                <Send className="h-4 w-4 mr-2" />
+                Publish
               </Button>
             </div>
           </div>
@@ -378,100 +360,18 @@ const PostEditor = () => {
           <div className="space-y-6">
             {/* AI Assistant */}
             <AIAssistant onContentGenerated={handleAIContentGenerated} />
-            {/* Publishing Options */}
-            <div className="card-elegant p-6">
-              <h3 className="font-semibold text-foreground mb-4">Publishing</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Status
-                  </label>
-                  <select
-                    value={post.status}
-                    onChange={(e) => setPost({ ...post, status: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="scheduled">Scheduled</option>
-                  </select>
+            {/* Publishing Status */}
+            {post.status === 'scheduled' && post.scheduled_at && (
+              <div className="card-elegant p-6">
+                <h3 className="font-semibold text-foreground mb-4">Publishing</h3>
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Scheduled for:</strong><br />
+                    {format(new Date(post.scheduled_at), "PPP 'at' p")}
+                  </p>
                 </div>
-
-                {post.status === 'scheduled' && (
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Publish Date & Time
-                    </label>
-                    
-                    <div className="space-y-2">
-                      {/* Date Picker */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !post.scheduled_at && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {post.scheduled_at 
-                              ? format(new Date(post.scheduled_at), "PPP") 
-                              : "Pick a date"
-                            }
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <CalendarComponent
-                            mode="single"
-                            selected={post.scheduled_at ? new Date(post.scheduled_at) : undefined}
-                            onSelect={(date) => {
-                              if (date) {
-                                const currentTime = post.scheduled_at 
-                                  ? post.scheduled_at.split('T')[1] 
-                                  : '12:00';
-                                const newDateTime = `${format(date, 'yyyy-MM-dd')}T${currentTime}`;
-                                setPost({ ...post, scheduled_at: newDateTime });
-                              }
-                            }}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                            className="pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Time Picker */}
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <input
-                          type="time"
-                          value={post.scheduled_at ? post.scheduled_at.split('T')[1] || '12:00' : '12:00'}
-                          onChange={(e) => {
-                            const currentDate = post.scheduled_at 
-                              ? post.scheduled_at.split('T')[0] 
-                              : format(new Date(), 'yyyy-MM-dd');
-                            const newDateTime = `${currentDate}T${e.target.value}`;
-                            setPost({ ...post, scheduled_at: newDateTime });
-                          }}
-                          className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
-                        />
-                      </div>
-
-                      {post.scheduled_at && (
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <p className="text-sm text-muted-foreground">
-                            <strong>Scheduled for:</strong><br />
-                            {format(new Date(post.scheduled_at), "PPP 'at' p")}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
+            )}
 
             {/* Tags */}
             <div className="card-elegant p-6">
@@ -543,6 +443,23 @@ const PostEditor = () => {
           </div>
         </div>
       </div>
+
+      <PublishDialog
+        open={publishDialogOpen}
+        onOpenChange={setPublishDialogOpen}
+        post={post}
+        onPost={setPost}
+        onPublishNow={() => {
+          setPublishDialogOpen(false);
+          savePost('published');
+        }}
+        onSchedule={(scheduledAt) => {
+          setPost(prev => ({ ...prev, scheduled_at: scheduledAt, status: 'scheduled' }));
+          setPublishDialogOpen(false);
+          savePost('scheduled');
+        }}
+        loading={loading}
+      />
     </div>
   );
 };
