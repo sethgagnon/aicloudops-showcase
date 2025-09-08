@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import AIAssistant from '@/components/AIAssistant';
 
 interface PostData {
   title: string;
@@ -210,6 +211,16 @@ const PostEditor = () => {
     }
   };
 
+  const handleAIContentGenerated = (aiContent: any) => {
+    setPost(prev => ({
+      ...prev,
+      title: prev.title || aiContent.title,
+      excerpt: prev.excerpt || aiContent.excerpt,
+      content: prev.content || aiContent.content,
+      tags: [...new Set([...prev.tags, ...aiContent.tags])], // Merge tags without duplicates
+    }));
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -322,6 +333,8 @@ const PostEditor = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* AI Assistant */}
+            <AIAssistant onContentGenerated={handleAIContentGenerated} />
             {/* Publishing Options */}
             <div className="card-elegant p-6">
               <h3 className="font-semibold text-foreground mb-4">Publishing</h3>
