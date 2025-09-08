@@ -18,13 +18,62 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    const { prompt, contentType = 'blog-post', tone = 'professional', wordCount = 800 } = await req.json();
+    const { prompt, contentType = 'blog-post', tone = 'professional', wordCount = 800, action = 'generate' } = await req.json();
 
     if (!prompt) {
       throw new Error('Prompt is required');
     }
 
-    console.log('Generating article with prompt:', prompt);
+    console.log(`${action === 'optimize' ? 'Optimizing' : 'Generating article with'} prompt:`, prompt);
+
+    // Handle prompt optimization
+    if (action === 'optimize') {
+      const optimizationPrompt = `You are an expert content strategist. Take the user's basic prompt and transform it into a detailed, optimized prompt that will generate high-quality ${contentType} content.
+
+Guidelines for optimization:
+- Make the prompt more specific and actionable
+- Include structure suggestions (headings, key points to cover)
+- Add context about target audience and purpose
+- Suggest key elements that should be included
+- Make it clear what type of ${contentType} is needed
+- Consider SEO and engagement factors
+
+Original prompt: "${prompt}"
+Content type: ${contentType}
+Tone: ${tone}
+Word count: ${wordCount}
+
+Return ONLY the optimized prompt text, nothing else.`;
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4.1-2025-04-14',
+          messages: [
+            { role: 'user', content: optimizationPrompt }
+          ],
+          max_tokens: 500,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('OpenAI API error:', error);
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const optimizedPrompt = data.choices[0].message.content.trim();
+
+      return new Response(JSON.stringify({ optimizedPrompt }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const systemPrompt = `You are an expert content writer. Generate high-quality ${contentType} content in a ${tone} tone. 
 

@@ -21,10 +21,12 @@ interface AIAssistantProps {
 
 const AIAssistant: React.FC<AIAssistantProps> = ({ onContentGenerated }) => {
   const [prompt, setPrompt] = useState('');
+  const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [contentType, setContentType] = useState('blog-post');
   const [tone, setTone] = useState('professional');
   const [wordCount, setWordCount] = useState('800');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const { toast } = useToast();
 
   const contentTypes = [
@@ -49,8 +51,53 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onContentGenerated }) => {
     { value: '1600', label: '1600 words (Extended)' },
   ];
 
-  const handleGenerate = async () => {
+  const handleOptimizePrompt = async () => {
     if (!prompt.trim()) {
+      toast({
+        title: 'Prompt Required',
+        description: 'Please enter a basic prompt to optimize.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsOptimizing(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-article-generator', {
+        body: {
+          prompt,
+          contentType,
+          tone,
+          wordCount: parseInt(wordCount),
+          action: 'optimize',
+        },
+      });
+
+      if (error) throw error;
+
+      setOptimizedPrompt(data.optimizedPrompt);
+      
+      toast({
+        title: 'Prompt Optimized!',
+        description: 'Your prompt has been enhanced for better article generation.',
+      });
+
+    } catch (error) {
+      console.error('Error optimizing prompt:', error);
+      toast({
+        title: 'Optimization Failed',
+        description: error.message || 'Failed to optimize prompt. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    const currentPrompt = optimizedPrompt || prompt;
+    if (!currentPrompt.trim()) {
       toast({
         title: 'Prompt Required',
         description: 'Please enter a topic or prompt for your article.',
@@ -64,10 +111,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onContentGenerated }) => {
     try {
       const { data, error } = await supabase.functions.invoke('ai-article-generator', {
         body: {
-          prompt,
+          prompt: currentPrompt,
           contentType,
           tone,
           wordCount: parseInt(wordCount),
+          action: 'generate',
         },
       });
 
@@ -120,7 +168,48 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onContentGenerated }) => {
             rows={3}
             className="resize-none"
           />
+          <div className="flex gap-2">
+            <Button
+              onClick={handleOptimizePrompt}
+              disabled={isOptimizing || !prompt.trim()}
+              variant="outline"
+              size="sm"
+            >
+              {isOptimizing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Optimizing...
+                </>
+              ) : (
+                <>
+                  <Lightbulb className="mr-2 h-4 w-4" />
+                  Optimize Prompt
+                </>
+              )}
+            </Button>
+            {optimizedPrompt && (
+              <Button
+                onClick={() => setOptimizedPrompt('')}
+                variant="ghost"
+                size="sm"
+              >
+                Clear Optimization
+              </Button>
+            )}
+          </div>
         </div>
+
+        {optimizedPrompt && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-primary">Optimized Prompt</label>
+            <div className="p-3 bg-muted rounded-md border-l-4 border-primary">
+              <p className="text-sm">{optimizedPrompt}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This enhanced prompt will be used for article generation. You can still edit the original prompt above.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
@@ -196,7 +285,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onContentGenerated }) => {
 
         <Button
           onClick={handleGenerate}
-          disabled={isGenerating || !prompt.trim()}
+          disabled={isGenerating || (!prompt.trim() && !optimizedPrompt.trim())}
           className="w-full"
           size="lg"
         >
@@ -208,7 +297,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onContentGenerated }) => {
           ) : (
             <>
               <Wand2 className="mr-2 h-4 w-4" />
-              Generate Article
+              Generate Article {optimizedPrompt ? '(Using Optimized Prompt)' : ''}
             </>
           )}
         </Button>
