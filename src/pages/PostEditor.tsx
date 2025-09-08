@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Eye, Calendar, Tag as TagIcon, X } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Calendar, Tag as TagIcon, X, CalendarIcon, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { Button } from '@/components/ui/button';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import AIAssistant from '@/components/AIAssistant';
 
 interface PostData {
@@ -125,6 +130,28 @@ const PostEditor = () => {
         variant: "destructive"
       });
       return;
+    }
+
+    if (status === 'scheduled' && !post.scheduled_at) {
+      toast({
+        title: "Schedule date required",
+        description: "Please select a date and time to schedule your post.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (status === 'scheduled' && post.scheduled_at) {
+      const scheduledDate = new Date(post.scheduled_at);
+      const now = new Date();
+      if (scheduledDate <= now) {
+        toast({
+          title: "Invalid schedule date",
+          description: "Scheduled date must be in the future.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     try {
@@ -261,32 +288,32 @@ const PostEditor = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => savePost('draft')}
                 disabled={loading}
-                className="btn-outline"
               >
                 <Save className="h-4 w-4 mr-2" />
                 Save Draft
-              </button>
-              {post.status !== 'draft' && (
-                <button
-                  onClick={() => savePost('scheduled')}
-                  disabled={loading}
-                  className="btn-outline"
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule
-                </button>
-              )}
-              <button
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => savePost('scheduled')}
+                disabled={loading || post.status !== 'scheduled' || !post.scheduled_at}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule
+              </Button>
+              
+              <Button
                 onClick={() => savePost('published')}
                 disabled={loading}
-                className="btn-hero"
+                className="bg-primary hover:bg-primary/90"
               >
                 <Eye className="h-4 w-4 mr-2" />
-                Publish
-              </button>
+                Publish Now
+              </Button>
             </div>
           </div>
         </div>
@@ -361,16 +388,75 @@ const PostEditor = () => {
                 </div>
 
                 {post.status === 'scheduled' && (
-                  <div>
+                  <div className="space-y-3">
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Publish Date
+                      Publish Date & Time
                     </label>
-                    <input
-                      type="datetime-local"
-                      value={post.scheduled_at}
-                      onChange={(e) => setPost({ ...post, scheduled_at: e.target.value })}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                    />
+                    
+                    <div className="space-y-2">
+                      {/* Date Picker */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !post.scheduled_at && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {post.scheduled_at 
+                              ? format(new Date(post.scheduled_at), "PPP") 
+                              : "Pick a date"
+                            }
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={post.scheduled_at ? new Date(post.scheduled_at) : undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                const currentTime = post.scheduled_at 
+                                  ? post.scheduled_at.split('T')[1] 
+                                  : '12:00';
+                                const newDateTime = `${format(date, 'yyyy-MM-dd')}T${currentTime}`;
+                                setPost({ ...post, scheduled_at: newDateTime });
+                              }
+                            }}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Time Picker */}
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <input
+                          type="time"
+                          value={post.scheduled_at ? post.scheduled_at.split('T')[1] || '12:00' : '12:00'}
+                          onChange={(e) => {
+                            const currentDate = post.scheduled_at 
+                              ? post.scheduled_at.split('T')[0] 
+                              : format(new Date(), 'yyyy-MM-dd');
+                            const newDateTime = `${currentDate}T${e.target.value}`;
+                            setPost({ ...post, scheduled_at: newDateTime });
+                          }}
+                          className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
+                        />
+                      </div>
+
+                      {post.scheduled_at && (
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <p className="text-sm text-muted-foreground">
+                            <strong>Scheduled for:</strong><br />
+                            {format(new Date(post.scheduled_at), "PPP 'at' p")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
