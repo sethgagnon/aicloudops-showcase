@@ -16,7 +16,7 @@ const Hero = () => {
         <div className="text-center">
           {/* Main Headline */}
           <h1 className="text-4xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
-            Leading the Future of{' '}
+            Future of{' '}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               AI & Cloud Operations
             </span>
