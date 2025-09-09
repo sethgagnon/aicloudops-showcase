@@ -17,24 +17,24 @@ const SignupPrompt = ({ className = '' }: SignupPromptProps) => {
       </div>
       
       <h3 className="text-2xl font-bold text-foreground mb-4">
-        Continue Reading with Free Access
+        Continue Reading - Sign Up Required
       </h3>
       
       <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-        You've used your free article preview. Sign up to unlock unlimited access to all insights on AI leadership, cloud strategy, and engineering management.
+        You've used your guest preview access. Sign up to continue reading unlimited insights on AI leadership, cloud strategy, and engineering management.
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4">
         <Link to="/auth">
           <Button size="lg" className="w-full sm:w-auto">
             <Sparkles className="h-4 w-4 mr-2" />
-            Get Free Access
+            Sign Up to Continue
           </Button>
         </Link>
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Join other technology leaders • No spam, ever
+        Join other technology leaders • Always free • No spam
       </p>
     </Card>
   );

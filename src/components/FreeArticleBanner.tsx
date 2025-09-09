@@ -6,13 +6,13 @@ import { useFreeArticle } from '@/hooks/useFreeArticle';
 
 const FreeArticleBanner = () => {
   const { user } = useAuth();
-  const { freeArticlesUsed, maxFreeArticles, canReadFreeArticle } = useFreeArticle();
+  const { guestArticlesUsed, maxFreeArticles, canReadFreeArticle } = useFreeArticle();
 
   // Don't show banner if user is authenticated
   if (user) return null;
 
   // Don't show if they haven't started reading yet
-  if (freeArticlesUsed === 0) return null;
+  if (guestArticlesUsed === 0) return null;
 
   // Show different content based on whether they can still read articles
   if (canReadFreeArticle()) {
@@ -23,9 +23,9 @@ const FreeArticleBanner = () => {
             <div className="flex items-center">
               <Info className="h-5 w-5 text-primary mr-2" />
               <p className="text-sm text-foreground">
-                <span className="font-medium">Free articles remaining: {maxFreeArticles - freeArticlesUsed}</span>
+                <span className="font-medium">Guest access remaining: {maxFreeArticles - guestArticlesUsed}</span>
                 <span className="text-muted-foreground ml-1">
-                  • Sign up for unlimited access
+                  • Sign up to continue reading
                 </span>
               </p>
             </div>
@@ -48,15 +48,15 @@ const FreeArticleBanner = () => {
           <div className="flex items-center">
             <Sparkles className="h-5 w-5 mr-2" />
             <p className="text-sm">
-              <span className="font-medium">You've reached your free article limit.</span>
+              <span className="font-medium">You've reached your preview limit.</span>
               <span className="ml-1 opacity-90">
-                Sign up to continue reading insights on AI leadership and cloud strategy.
+                Sign up to continue reading - it's always free.
               </span>
             </p>
           </div>
           <Link to="/auth">
             <Button variant="secondary" size="sm">
-              Get Free Access
+              Continue Reading
             </Button>
           </Link>
         </div>

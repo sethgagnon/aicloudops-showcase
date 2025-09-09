@@ -1,33 +1,33 @@
 import { useState, useEffect } from 'react';
 
-const FREE_ARTICLES_KEY = 'free_articles_read';
+const FREE_ARTICLES_KEY = 'guest_articles_read';
 const MAX_FREE_ARTICLES = 1;
 
 export const useFreeArticle = () => {
-  const [freeArticlesUsed, setFreeArticlesUsed] = useState(0);
+  const [guestArticlesUsed, setGuestArticlesUsed] = useState(0);
 
   useEffect(() => {
     const stored = localStorage.getItem(FREE_ARTICLES_KEY);
-    setFreeArticlesUsed(stored ? parseInt(stored, 10) : 0);
+    setGuestArticlesUsed(stored ? parseInt(stored, 10) : 0);
   }, []);
 
   const markArticleAsRead = () => {
-    const newCount = freeArticlesUsed + 1;
-    setFreeArticlesUsed(newCount);
+    const newCount = guestArticlesUsed + 1;
+    setGuestArticlesUsed(newCount);
     localStorage.setItem(FREE_ARTICLES_KEY, newCount.toString());
   };
 
   const canReadFreeArticle = () => {
-    return freeArticlesUsed < MAX_FREE_ARTICLES;
+    return guestArticlesUsed < MAX_FREE_ARTICLES;
   };
 
   const resetFreeArticles = () => {
-    setFreeArticlesUsed(0);
+    setGuestArticlesUsed(0);
     localStorage.removeItem(FREE_ARTICLES_KEY);
   };
 
   return {
-    freeArticlesUsed,
+    guestArticlesUsed,
     canReadFreeArticle,
     markArticleAsRead,
     resetFreeArticles,

@@ -36,10 +36,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Reset free articles when user signs in
+        // Reset guest access when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
-          // Clear free articles tracking since user is now authenticated
-          localStorage.removeItem('free_articles_read');
+          // Clear guest access tracking since user is now authenticated
+          localStorage.removeItem('guest_articles_read');
           
           // Check if profile exists, create if not
           setTimeout(async () => {
