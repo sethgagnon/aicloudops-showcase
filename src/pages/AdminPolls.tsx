@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Bot, Calendar, Users, Trash2, Play, Pause, RefreshCw, Sparkles } from 'lucide-react';
+import { Bot, Calendar, Users, Trash2, Play, Pause, RefreshCw, Sparkles, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -23,6 +25,7 @@ interface Poll {
   status: string;
   week_of: string;
   created_at: string;
+  scheduled_at?: string;
   ai_generated: boolean;
 }
 
@@ -31,6 +34,9 @@ const AdminPolls = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [theme, setTheme] = useState('');
+  const [schedulingPollId, setSchedulingPollId] = useState<string | null>(null);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -138,6 +144,41 @@ const AdminPolls = () => {
     }
   };
 
+  const schedulePoll = async () => {
+    if (!schedulingPollId || !scheduleDate || !scheduleTime) return;
+    
+    try {
+      const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+      
+      const { error } = await supabase
+        .from('polls')
+        .update({ 
+          status: 'scheduled',
+          scheduled_at: scheduledAt 
+        })
+        .eq('id', schedulingPollId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Poll Scheduled",
+        description: `Poll scheduled for ${new Date(scheduledAt).toLocaleString()}`,
+      });
+
+      setSchedulingPollId(null);
+      setScheduleDate('');
+      setScheduleTime('');
+      await fetchPolls();
+    } catch (error) {
+      console.error('Error scheduling poll:', error);
+      toast({
+        title: "Error",
+        description: "Failed to schedule poll",
+        variant: "destructive"
+      });
+    }
+  };
+
   const deletePoll = async (pollId: string) => {
     try {
       // First delete associated votes
@@ -182,6 +223,7 @@ const AdminPolls = () => {
     switch (status) {
       case 'live': return 'bg-success text-success-foreground';
       case 'draft': return 'bg-muted text-muted-foreground';
+      case 'scheduled': return 'bg-primary text-primary-foreground';
       case 'closed': return 'bg-secondary text-secondary-foreground';
       default: return 'bg-muted text-muted-foreground';
     }
@@ -206,6 +248,7 @@ const AdminPolls = () => {
 
   const draftPolls = polls.filter(p => p.status === 'draft');
   const livePolls = polls.filter(p => p.status === 'live');
+  const scheduledPolls = polls.filter(p => p.status === 'scheduled');
   const closedPolls = polls.filter(p => p.status === 'closed');
 
   return (
@@ -255,7 +298,7 @@ const AdminPolls = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <Card className="card-elegant">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
@@ -293,6 +336,20 @@ const AdminPolls = () => {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Drafts</p>
                   <p className="text-2xl font-bold text-foreground">{draftPolls.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-elegant">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Clock className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Scheduled</p>
+                  <p className="text-2xl font-bold text-foreground">{scheduledPolls.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -348,6 +405,11 @@ const AdminPolls = () => {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="w-4 h-4" />
                       {formatDate(poll.week_of)}
+                      {poll.scheduled_at && (
+                        <span className="ml-2 text-primary">
+                          • Scheduled: {new Date(poll.scheduled_at).toLocaleString()}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <CardTitle className="text-xl">{poll.title}</CardTitle>
@@ -373,12 +435,78 @@ const AdminPolls = () => {
 
                   <div className="flex items-center gap-2">
                     {poll.status === 'draft' && (
+                      <>
+                        <Button 
+                          onClick={() => updatePollStatus(poll.id, 'live')}
+                          variant="default"
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Publish Now
+                        </Button>
+                        
+                        <Dialog open={schedulingPollId === poll.id} onOpenChange={(open) => !open && setSchedulingPollId(null)}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline"
+                              onClick={() => setSchedulingPollId(poll.id)}
+                            >
+                              <Clock className="w-4 h-4 mr-2" />
+                              Schedule
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Schedule Poll</DialogTitle>
+                              <DialogDescription>
+                                Set when this poll should automatically go live.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="date" className="text-right">
+                                  Date
+                                </Label>
+                                <Input
+                                  id="date"
+                                  type="date"
+                                  value={scheduleDate}
+                                  onChange={(e) => setScheduleDate(e.target.value)}
+                                  className="col-span-3"
+                                />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="time" className="text-right">
+                                  Time
+                                </Label>
+                                <Input
+                                  id="time"
+                                  type="time"
+                                  value={scheduleTime}
+                                  onChange={(e) => setScheduleTime(e.target.value)}
+                                  className="col-span-3"
+                                />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setSchedulingPollId(null)}>
+                                Cancel
+                              </Button>
+                              <Button onClick={schedulePoll}>
+                                Schedule Poll
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </>
+                    )}
+
+                    {poll.status === 'scheduled' && (
                       <Button 
                         onClick={() => updatePollStatus(poll.id, 'live')}
                         variant="default"
                       >
                         <Play className="w-4 h-4 mr-2" />
-                        Publish Poll
+                        Publish Now
                       </Button>
                     )}
                     
