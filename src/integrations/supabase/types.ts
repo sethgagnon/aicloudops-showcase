@@ -94,6 +94,7 @@ export type Database = {
           linkedin_post_id: string | null
           linkedin_posted_at: string | null
           options: Json
+          scheduled_at: string | null
           status: string
           title: string
           total_votes: number
@@ -111,6 +112,7 @@ export type Database = {
           linkedin_post_id?: string | null
           linkedin_posted_at?: string | null
           options?: Json
+          scheduled_at?: string | null
           status?: string
           title: string
           total_votes?: number
@@ -128,6 +130,7 @@ export type Database = {
           linkedin_post_id?: string | null
           linkedin_posted_at?: string | null
           options?: Json
+          scheduled_at?: string | null
           status?: string
           title?: string
           total_votes?: number
