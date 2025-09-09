@@ -20,7 +20,7 @@ const FreeArticleBanner = () => {
             <div className="flex items-center">
               <Sparkles className="h-5 w-5 text-accent mr-2" />
               <p className="text-sm text-foreground">
-                <span className="font-medium">Welcome! You can read 1 article for free.</span>
+                <span className="font-medium">Welcome! You can read 1 article as a guest.</span>
                 <span className="text-muted-foreground ml-1">
                   • Sign up for unlimited access
                 </span>
