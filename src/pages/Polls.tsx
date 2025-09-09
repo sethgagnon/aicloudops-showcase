@@ -37,6 +37,7 @@ interface Poll {
   updated_at: string;
   linkedin_posted_at?: string;
   linkedin_post_id?: string;
+  linkedin_content?: string;
 }
 
 interface PollFormData {
@@ -44,6 +45,7 @@ interface PollFormData {
   description: string;
   options: string[];
   expires_at?: string;
+  linkedinContent?: string;
 }
 
 const Polls = () => {
@@ -60,7 +62,8 @@ const Polls = () => {
     title: '',
     description: '',
     options: ['', ''],
-    expires_at: ''
+    expires_at: '',
+    linkedinContent: ''
   });
   const [generatingPoll, setGeneratingPoll] = useState(false);
   const [postingToLinkedIn, setPostingToLinkedIn] = useState<string | null>(null);
@@ -119,7 +122,8 @@ const Polls = () => {
       title: '',
       description: '',
       options: ['', ''],
-      expires_at: ''
+      expires_at: '',
+      linkedinContent: ''
     });
     setEditingPoll(null);
   };
@@ -134,7 +138,8 @@ const Polls = () => {
       title: poll.title,
       description: poll.description || '',
       options: poll.options.map(opt => opt.text),
-      expires_at: poll.expires_at ? format(new Date(poll.expires_at), "yyyy-MM-dd'T'HH:mm") : ''
+      expires_at: poll.expires_at ? format(new Date(poll.expires_at), "yyyy-MM-dd'T'HH:mm") : '',
+      linkedinContent: poll.linkedin_content || ''
     });
     setEditingPoll(poll);
     setShowCreateDialog(true);
@@ -172,17 +177,18 @@ const Polls = () => {
 
       if (error) throw error;
 
-      const { title, description, options } = data;
+      const { title, description, options, linkedinContent } = data;
       setFormData(prev => ({
         ...prev,
         title,
         description,
-        options
+        options,
+        linkedinContent: linkedinContent || ''
       }));
 
       toast({
-        title: "Poll generated!",
-        description: "AI has generated poll content based on your topic."
+        title: "Poll and LinkedIn content generated!",
+        description: "AI has generated both poll content and LinkedIn post content."
       });
     } catch (error: any) {
       toast({
@@ -215,6 +221,7 @@ const Polls = () => {
         description: formData.description.trim() || null,
         options: pollOptions,
         expires_at: formData.expires_at || null,
+        linkedin_content: formData.linkedinContent?.trim() || null,
         created_by: user?.id
       };
 
@@ -308,12 +315,13 @@ const Polls = () => {
   const postToLinkedIn = async (poll: Poll) => {
     setPostingToLinkedIn(poll.id);
     try {
+      const linkedinContent = poll.linkedin_content || 
+        `🤔 ${poll.title}\n\n${poll.description ? poll.description + '\n\n' : ''}Vote and see results at aicloudops.com/polls\n\n#AI #CloudComputing #Leadership #TechPolls`;
+
       const { data, error } = await supabase.functions.invoke('linkedin-post', {
         body: {
           pollId: poll.id,
-          title: poll.title,
-          description: poll.description,
-          options: poll.options.map(opt => opt.text)
+          linkedinContent
         }
       });
 
@@ -662,6 +670,20 @@ const Polls = () => {
                 value={formData.expires_at}
                 onChange={(e) => setFormData(prev => ({ ...prev, expires_at: e.target.value }))}
               />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">LinkedIn Post Content</label>
+              <Textarea
+                placeholder="LinkedIn post content will be generated automatically, but you can customize it here..."
+                value={formData.linkedinContent}
+                onChange={(e) => setFormData(prev => ({ ...prev, linkedinContent: e.target.value }))}
+                rows={4}
+                className="text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This content will be used when posting to LinkedIn. Include emojis and hashtags for better engagement.
+              </p>
             </div>
           </div>
 
