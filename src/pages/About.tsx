@@ -7,33 +7,27 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import SEO from '@/components/SEO';
 const About = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  
   useEffect(() => {
     if (user) {
       fetchProfileImage();
     }
   }, [user]);
-
   const fetchProfileImage = async () => {
     if (!user) return;
-    
-    const { data } = await supabase
-      .from('profiles')
-      .select('avatar_url')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
+    const {
+      data
+    } = await supabase.from('profiles').select('avatar_url').eq('user_id', user.id).maybeSingle();
     if (data?.avatar_url) {
       setProfileImageUrl(data.avatar_url);
     }
   };
-
   const handleImageUpdate = (imageUrl: string) => {
     setProfileImageUrl(imageUrl);
   };
-
   const skills = [{
     category: 'AI & Machine Learning',
     items: ['AI Strategy', 'MLOps', 'Data Architecture', 'LLM Integration']
@@ -47,7 +41,6 @@ const About = () => {
     category: 'DevOps & Architecture',
     items: ['CI/CD', 'Infrastructure as Code', 'Microservices', 'Security']
   }];
-
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -62,26 +55,8 @@ const About = () => {
       "name": "CloudTech LLC"
     },
     "url": "https://aicloudops.tech/about",
-    "sameAs": [
-      "https://www.linkedin.com/in/sethgagnon/"
-    ],
-    "knowsAbout": [
-      "AI Strategy",
-      "MLOps", 
-      "Data Architecture",
-      "LLM Integration",
-      "AWS",
-      "Azure",
-      "GCP",
-      "Kubernetes",
-      "Terraform",
-      "Team Building",
-      "Agile Management",
-      "Strategic Planning",
-      "CI/CD",
-      "Infrastructure as Code",
-      "Microservices"
-    ],
+    "sameAs": ["https://www.linkedin.com/in/sethgagnon/"],
+    "knowsAbout": ["AI Strategy", "MLOps", "Data Architecture", "LLM Integration", "AWS", "Azure", "GCP", "Kubernetes", "Terraform", "Team Building", "Agile Management", "Strategic Planning", "CI/CD", "Infrastructure as Code", "Microservices"],
     "hasOccupation": {
       "@type": "Occupation",
       "name": "Cloud Engineering Director",
@@ -101,16 +76,8 @@ const About = () => {
       "name": "Technology Industry"
     }
   };
-
   return <div className="min-h-screen bg-background">
-      <SEO 
-        title="About Seth Gagnon - Cloud Engineering Director & AI Leadership Expert"
-        description="Meet Seth Gagnon, Cloud Engineering Director at Evernorth Health Services and owner of CloudTech LLC. 20+ years experience in AI, cloud platforms (AWS, Azure, GCP), and engineering leadership."
-        keywords="Seth Gagnon, Cloud Engineering Director, Evernorth Health Services, CloudTech LLC, AI leadership, cloud platforms, AWS, Azure, GCP, engineering management"
-        canonical="https://aicloudops.tech/about"
-        ogType="profile"
-        structuredData={structuredData}
-      />
+      <SEO title="About Seth Gagnon - Cloud Engineering Director & AI Leadership Expert" description="Meet Seth Gagnon, Cloud Engineering Director at Evernorth Health Services and owner of CloudTech LLC. 20+ years experience in AI, cloud platforms (AWS, Azure, GCP), and engineering leadership." keywords="Seth Gagnon, Cloud Engineering Director, Evernorth Health Services, CloudTech LLC, AI leadership, cloud platforms, AWS, Azure, GCP, engineering management" canonical="https://aicloudops.tech/about" ogType="profile" structuredData={structuredData} />
       <Navigation />
       
       <main>
@@ -121,16 +88,11 @@ const About = () => {
               <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
                 Meet Seth Gagnon
               </h1>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Seasoned leader in public cloud consulting, guiding application teams across the enterprise 
-                through their cloud transformation journey with expertise in AWS, Azure, and Google Cloud.
-              </p>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">Seasoned leader in public cloud consulting, guiding application teams across the enterprise through their cloud transformation journey with expertise in AWS, Azure, and Google Cloud. AI Integrator and Enabler.</p>
             </div>
 
             {/* Profile Image Upload */}
-            <ProfileImageUpload 
-              currentImageUrl={profileImageUrl}
-            />
+            <ProfileImageUpload currentImageUrl={profileImageUrl} />
           </div>
         </section>
 
