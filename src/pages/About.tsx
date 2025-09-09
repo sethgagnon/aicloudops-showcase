@@ -166,7 +166,7 @@ const About = () => {
                       <div>
                         <p className="font-medium text-foreground">LinkedIn</p>
                         <a href="https://www.linkedin.com/in/sethgagnon/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:text-primary-glow transition-colors">
-                          /in/sethgagnon
+                          Seth Gagnon
                         </a>
                       </div>
                     </div>
