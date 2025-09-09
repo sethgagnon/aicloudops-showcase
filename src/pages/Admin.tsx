@@ -21,20 +21,12 @@ interface Post {
   scheduled_at?: string;
 }
 
-interface Poll {
-  id: string;
-  title: string;
-  status: 'draft' | 'live' | 'closed';
-  total_votes: number;
-  created_at: string;
-}
 
 const Admin = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -47,7 +39,6 @@ const Admin = () => {
   useEffect(() => {
     if (user) {
       fetchPosts();
-      fetchPolls();
     }
   }, [user]);
 
@@ -91,29 +82,6 @@ const Admin = () => {
     }
   };
 
-  const fetchPolls = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('polls')
-        .select('id, title, status, total_votes, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      setPolls((data || []).map(poll => ({
-        ...poll,
-        status: poll.status as 'draft' | 'live' | 'closed'
-      })));
-    } catch (error: any) {
-      toast({
-        title: "Error fetching polls",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -194,13 +162,6 @@ const Admin = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 New Post
               </button>
-              <button
-                onClick={() => navigate('/polls')}
-                className="btn-outline inline-flex items-center"
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Manage Polls
-              </button>
               {isAdmin && (
                 <button
                   onClick={() => navigate('/admin/users')}
@@ -221,7 +182,7 @@ const Admin = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="card-elegant p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -276,17 +237,6 @@ const Admin = () => {
               </div>
             </div>
 
-            <div className="card-elegant p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Polls</p>
-                  <p className="text-2xl font-bold text-foreground">{polls.length}</p>
-                </div>
-                <div className="p-3 bg-purple-500/10 rounded-full">
-                  <BarChart3 className="h-5 w-5 text-purple-600" />
-                </div>
-              </div>
-            </div>
           </div>
 
 
