@@ -4,12 +4,11 @@ const FREE_ARTICLES_KEY = 'guest_articles_read';
 const MAX_FREE_ARTICLES = 1;
 
 export const useFreeArticle = () => {
-  const [guestArticlesUsed, setGuestArticlesUsed] = useState(0);
-
-  useEffect(() => {
+  const [guestArticlesUsed, setGuestArticlesUsed] = useState(() => {
     const stored = localStorage.getItem(FREE_ARTICLES_KEY);
-    setGuestArticlesUsed(stored ? parseInt(stored, 10) : 0);
-  }, []);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+
 
   const markArticleAsRead = () => {
     const newCount = guestArticlesUsed + 1;
@@ -18,6 +17,7 @@ export const useFreeArticle = () => {
   };
 
   const canReadFreeArticle = () => {
+    console.log('canReadFreeArticle check:', { guestArticlesUsed, MAX_FREE_ARTICLES, result: guestArticlesUsed < MAX_FREE_ARTICLES });
     return guestArticlesUsed < MAX_FREE_ARTICLES;
   };
 

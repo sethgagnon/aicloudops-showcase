@@ -37,13 +37,16 @@ const BlogPost = () => {
   const { canReadFreeArticle, markArticleAsRead } = useFreeArticle();
 
   useEffect(() => {
+    console.log('BlogPost useEffect:', { authLoading, slug, user: !!user, canRead: canReadFreeArticle() });
     if (!authLoading && slug) {
       // Allow unauthenticated users if they can still read free articles
       if (!user && !canReadFreeArticle()) {
+        console.log('Redirecting to auth - user not logged in and cannot read free article');
         navigate(`/auth?return=/blog/${slug}`);
         return;
       }
       
+      console.log('Fetching post for slug:', slug);
       fetchPost(slug);
     }
   }, [slug, user, authLoading, navigate, canReadFreeArticle]);
