@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3 } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -163,13 +163,22 @@ const Admin = () => {
                 New Post
               </button>
               {isAdmin && (
-                <button
-                  onClick={() => navigate('/admin/users')}
-                  className="btn-outline inline-flex items-center"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Users
-                </button>
+                <>
+                  <button
+                    onClick={() => navigate('/admin/users')}
+                    className="btn-outline inline-flex items-center"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Users
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/polls')}
+                    className="btn-outline inline-flex items-center"
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Polls
+                  </button>
+                </>
               )}
               <button
                 onClick={handleSignOut}

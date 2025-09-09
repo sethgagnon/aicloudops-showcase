@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.auth-signup-notify]
 verify_jwt = false
+
+[functions.generate-weekly-poll]
+verify_jwt = true
