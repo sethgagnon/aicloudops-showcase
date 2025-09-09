@@ -48,6 +48,44 @@ const Polls = () => {
     if (user) {
       fetchPreviousPolls();
     }
+
+    // Set up real-time subscription for poll updates
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'polls',
+          filter: 'status=in.(live,closed)'
+        },
+        () => {
+          fetchCurrentPoll();
+          if (user) {
+            fetchPreviousPolls();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'polls'
+        },
+        () => {
+          fetchCurrentPoll();
+          if (user) {
+            fetchPreviousPolls();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchCurrentPoll = async () => {

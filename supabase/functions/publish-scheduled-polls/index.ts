@@ -48,7 +48,7 @@ serve(async (req) => {
         throw closeError;
       }
 
-      // Then publish the scheduled polls (usually should be just one, but handle multiple)
+      // Then publish the scheduled polls (usually should be just one, but handle multiple)  
       const pollIds = scheduledPolls.map(poll => poll.id);
       const { error: publishError } = await supabase
         .from('polls')
