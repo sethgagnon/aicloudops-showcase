@@ -151,7 +151,7 @@ const About = () => {
                       <Award className="h-5 w-5 text-primary mt-0.5" />
                       <div>
                         <p className="font-medium text-foreground">Business Owner</p>
-                        <p className="text-sm text-muted-foreground">CloudTech LLC (5+ years)</p>
+                        <p className="text-sm text-muted-foreground">2013 - Present</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
@@ -166,7 +166,7 @@ const About = () => {
                       <div>
                         <p className="font-medium text-foreground">LinkedIn</p>
                         <a href="https://www.linkedin.com/in/sethgagnon/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:text-primary-glow transition-colors">
-                          Seth Gagnon
+                          /in/sethgagnon
                         </a>
                       </div>
                     </div>
