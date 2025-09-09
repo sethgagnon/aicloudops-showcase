@@ -66,7 +66,6 @@ const Polls = () => {
     linkedinContent: ''
   });
   const [generatingPoll, setGeneratingPoll] = useState(false);
-  const [postingToLinkedIn, setPostingToLinkedIn] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -312,36 +311,18 @@ const Polls = () => {
     }
   };
 
-  const postToLinkedIn = async (poll: Poll) => {
-    setPostingToLinkedIn(poll.id);
-    try {
-      const linkedinContent = poll.linkedin_content || 
-        `🤔 ${poll.title}\n\n${poll.description ? poll.description + '\n\n' : ''}Vote and see results at aicloudops.com/polls\n\n#AI #CloudComputing #Leadership #TechPolls`;
-
-      const { data, error } = await supabase.functions.invoke('linkedin-post', {
-        body: {
-          pollId: poll.id,
-          linkedinContent
-        }
-      });
-
-      if (error) throw error;
-
-      await fetchPolls();
-      
-      toast({
-        title: "Posted to LinkedIn!",
-        description: "Your poll has been successfully posted to LinkedIn."
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error posting to LinkedIn",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setPostingToLinkedIn(null);
-    }
+  const shareToLinkedIn = (poll: Poll) => {
+    const linkedinContent = poll.linkedin_content || 
+      `🤔 ${poll.title}\n\n${poll.description ? poll.description + '\n\n' : ''}Vote and see results at aicloudops.com/polls\n\n#AI #CloudComputing #Leadership #TechPolls`;
+    
+    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://aicloudops.com/polls')}&text=${encodeURIComponent(linkedinContent)}`;
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+    
+    toast({
+      title: "LinkedIn share opened",
+      description: "LinkedIn sharing window opened with your poll content."
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -556,16 +537,15 @@ const Polls = () => {
                           </Button>
                         </div>
 
-                        {poll.status === 'live' && !poll.linkedin_posted_at && (
+                        {poll.status === 'live' && (
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => postToLinkedIn(poll)}
-                            disabled={postingToLinkedIn === poll.id}
+                            onClick={() => shareToLinkedIn(poll)}
                             className="text-blue-700 border-blue-700 hover:bg-blue-700 hover:text-white"
                           >
                             <Linkedin className="h-4 w-4 mr-2" />
-                            {postingToLinkedIn === poll.id ? 'Posting...' : 'Post to LinkedIn'}
+                            Share to LinkedIn
                           </Button>
                         )}
                       </div>
