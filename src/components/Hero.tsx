@@ -4,13 +4,9 @@ import heroImage from '@/assets/hero-bg.jpg';
 const Hero = () => {
   return <section className="relative overflow-hidden bg-gradient-to-br from-background via-background to-muted">
       {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5" 
-        style={{ backgroundImage: `url(${heroImage})` }}
-        aria-hidden="true"
-        role="img"
-        aria-label="Abstract technology background with cloud and AI elements"
-      />
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5" style={{
+      backgroundImage: `url(${heroImage})`
+    }} aria-hidden="true" role="img" aria-label="Abstract technology background with cloud and AI elements" />
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
         <div className="text-center">
@@ -23,10 +19,7 @@ const Hero = () => {
           </h1>
           
           {/* Subheadline */}
-          <p className="text-xl lg:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-            Expert insights on artificial intelligence, cloud infrastructure, and leadership strategies 
-            that drive digital transformation in enterprise environments.
-          </p>
+          <p className="text-xl lg:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">Insights on artificial intelligence, cloud infrastructure, and leadership strategies that drive digital transformation in enterprise environments.</p>
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
