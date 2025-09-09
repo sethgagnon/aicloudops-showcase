@@ -50,31 +50,26 @@ serve(async (req) => {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
+        body: JSON.stringify({
         model: 'gpt-5-2025-08-07',
         messages: [
           {
             role: 'system',
-            content: `You are an expert at creating engaging weekly polls for an AI Cloud Ops blog. Create polls that are:
-            - Relevant to AI, Cloud Computing, DevOps, or Technology Leadership
-            - Professional but engaging
-            - Have exactly 4 clear, distinct options
-            - Suitable for both technical and business audiences
-            - Current and trending topics
-            
-            Return ONLY a valid JSON object with this exact structure:
-            {
-              "title": "Clear, engaging poll question",
-              "description": "Brief context or explanation (optional, can be null)",
-              "options": ["Option 1", "Option 2", "Option 3", "Option 4"]
-            }`
+            content: `Create a weekly poll for an AI Cloud Ops blog. Return ONLY valid JSON in this exact format:
+{
+  "title": "Poll question here",
+  "description": "Brief context (can be null)",
+  "options": ["Option A", "Option B", "Option C", "Option D"]
+}
+
+Topics: AI, Cloud Computing, DevOps, Tech Leadership. Make it engaging and professional.`
           },
           {
             role: 'user',
-            content: 'Generate a weekly poll for an AI Cloud Ops blog audience. Focus on current trends, practical decisions, or thought-provoking questions about AI, cloud infrastructure, DevOps practices, or tech leadership.'
+            content: 'Generate one poll about current AI or cloud trends. Be concise and direct.'
           }
         ],
-        max_completion_tokens: 300,
+        max_completion_tokens: 800,
       }),
     });
 
