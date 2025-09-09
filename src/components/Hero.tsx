@@ -14,7 +14,7 @@ const Hero = () => {
           <h1 className="text-4xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
             Future of{' '}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              AI & Cloud Operations
+              AI, Cloud, & Leadership
             </span>
           </h1>
           
