@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ai-article-generator]
 verify_jwt = true
+
+[functions.auth-signup-notify]
+verify_jwt = false

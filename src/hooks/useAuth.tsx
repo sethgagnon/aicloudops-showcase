@@ -75,17 +75,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: {
-          name: name
-        }
+        data: { name }
       }
     });
+
+    // Notify admin on account creation (non-blocking)
+    if (!error) {
+      try {
+        await supabase.functions.invoke('auth-signup-notify', {
+          body: { email, name },
+        });
+      } catch (notifyErr) {
+        console.error('Failed to notify admin about signup:', notifyErr);
+      }
+    }
+
     return { error };
   };
 
