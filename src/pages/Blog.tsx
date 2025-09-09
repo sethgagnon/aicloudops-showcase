@@ -3,9 +3,11 @@ import { Search, Tag, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useFreeArticle } from '@/hooks/useFreeArticle';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
+import FreeArticleBanner from '@/components/FreeArticleBanner';
 interface Post {
   id: string;
   title: string;
@@ -22,18 +24,13 @@ const Blog = () => {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
+  const { canReadFreeArticle } = useFreeArticle();
   const navigate = useNavigate();
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth?return=/blog');
-      return;
-    }
-    
-    if (user) {
-      fetchPosts();
-      fetchTags();
-    }
-  }, [user, authLoading, navigate]);
+    // Always load posts, regardless of auth status
+    fetchPosts();
+    fetchTags();
+  }, []);
   const fetchPosts = async () => {
     try {
       const {
@@ -137,6 +134,7 @@ const Blog = () => {
         canonical="https://aicloudops.tech/blog"
         structuredData={structuredData}
       />
+      <FreeArticleBanner />
       <Navigation />
       
       <main>
@@ -183,7 +181,16 @@ const Blog = () => {
               <h2 className="text-2xl font-bold text-foreground mb-8">Featured Articles</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {featuredPosts.map(post => <article key={post.id} className="card-feature group cursor-pointer">
-                    <Link to={`/blog/${post.slug}`} className="block">
+                    <Link 
+                      to={`/blog/${post.slug}`} 
+                      className="block"
+                      onClick={(e) => {
+                        if (!user && !canReadFreeArticle()) {
+                          e.preventDefault();
+                          navigate(`/auth?return=/blog/${post.slug}`);
+                        }
+                      }}
+                    >
                       <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                         <div className="flex items-center space-x-4">
                           <span className="flex items-center">
@@ -249,7 +256,16 @@ const Blog = () => {
                 </button>
               </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredPosts.map(post => <article key={post.id} className="card-elegant group cursor-pointer">
-                    <Link to={`/blog/${post.slug}`} className="block">
+                    <Link 
+                      to={`/blog/${post.slug}`} 
+                      className="block"
+                      onClick={(e) => {
+                        if (!user && !canReadFreeArticle()) {
+                          e.preventDefault();
+                          navigate(`/auth?return=/blog/${post.slug}`);
+                        }
+                      }}
+                    >
                       <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                         <span className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />

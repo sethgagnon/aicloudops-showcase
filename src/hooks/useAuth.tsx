@@ -36,8 +36,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Create profile if user signs up
+        // Reset free articles when user signs in
         if (event === 'SIGNED_IN' && session?.user) {
+          // Clear free articles tracking since user is now authenticated
+          localStorage.removeItem('free_articles_read');
+          
           // Check if profile exists, create if not
           setTimeout(async () => {
             const { data: profile } = await supabase

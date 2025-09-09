@@ -5,11 +5,14 @@ import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useFreeArticle } from '@/hooks/useFreeArticle';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
+import SignupPrompt from '@/components/SignupPrompt';
+import FreeArticleBanner from '@/components/FreeArticleBanner';
 
 interface BlogPostData {
   id: string;
@@ -31,17 +34,19 @@ const BlogPost = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { canReadFreeArticle, markArticleAsRead } = useFreeArticle();
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate(`/auth?return=/blog/${slug}`);
-      return;
-    }
-    
-    if (user && slug) {
+    if (!authLoading && slug) {
+      // Allow unauthenticated users if they can still read free articles
+      if (!user && !canReadFreeArticle()) {
+        navigate(`/auth?return=/blog/${slug}`);
+        return;
+      }
+      
       fetchPost(slug);
     }
-  }, [slug, user, authLoading, navigate]);
+  }, [slug, user, authLoading, navigate, canReadFreeArticle]);
 
   const fetchPost = async (postSlug: string) => {
     try {
@@ -58,6 +63,11 @@ const BlogPost = () => {
       }
 
       setPost(data);
+      
+      // Mark article as read for unauthenticated users
+      if (!user) {
+        markArticleAsRead();
+      }
     } catch (error) {
       console.error('Error fetching post:', error);
       setNotFound(true);
@@ -261,6 +271,7 @@ const BlogPost = () => {
         ogType="article"
         structuredData={structuredData}
       />
+      <FreeArticleBanner />
       <Navigation />
       
       <main>
@@ -374,6 +385,13 @@ const BlogPost = () => {
                   dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                 />
               </article>
+
+              {/* Show signup prompt for unauthenticated users who have used their free article */}
+              {!user && !canReadFreeArticle() && (
+                <div className="mt-12">
+                  <SignupPrompt />
+                </div>
+              )}
 
             {/* Article Footer */}
             <footer className="mt-16 pt-8 border-t border-border">

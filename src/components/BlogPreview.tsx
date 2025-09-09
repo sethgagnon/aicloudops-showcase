@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, ArrowRight, Tag } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useFreeArticle } from '@/hooks/useFreeArticle';
 
 interface BlogPost {
   id: string;
@@ -16,6 +18,9 @@ interface BlogPost {
 const BlogPreview = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { canReadFreeArticle } = useFreeArticle();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLatestPosts();
@@ -143,7 +148,16 @@ const BlogPreview = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {posts.map((post) => (
             <article key={post.id} className="card-elegant group cursor-pointer">
-              <Link to={`/blog/${post.slug}`} className="block">
+              <Link 
+                to={`/blog/${post.slug}`} 
+                className="block"
+                onClick={(e) => {
+                  if (!user && !canReadFreeArticle()) {
+                    e.preventDefault();
+                    navigate(`/auth?return=/blog/${post.slug}`);
+                  }
+                }}
+              >
                 {/* Post Header */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
