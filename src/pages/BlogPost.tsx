@@ -67,9 +67,11 @@ const BlogPost = () => {
 
       setPost(data);
       
-      // Mark article as read for unauthenticated users
+      // Mark article as read after user scrolls or spends time reading
       if (!user) {
-        markArticleAsRead();
+        setTimeout(() => {
+          markArticleAsRead();
+        }, 10000); // Mark as read after 10 seconds of viewing
       }
     } catch (error) {
       console.error('Error fetching post:', error);

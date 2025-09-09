@@ -11,8 +11,32 @@ const FreeArticleBanner = () => {
   // Don't show banner if user is authenticated
   if (user) return null;
 
-  // Don't show if they haven't started reading yet
-  if (guestArticlesUsed === 0) return null;
+  // Show message for first-time guests
+  if (guestArticlesUsed === 0) {
+    return (
+      <div className="bg-gradient-to-r from-accent/10 to-primary/10 border-b border-accent/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Sparkles className="h-5 w-5 text-accent mr-2" />
+              <p className="text-sm text-foreground">
+                <span className="font-medium">Welcome! You can read 1 article for free.</span>
+                <span className="text-muted-foreground ml-1">
+                  • Sign up for unlimited access
+                </span>
+              </p>
+            </div>
+            <Link to="/auth">
+              <Button variant="outline" size="sm">
+                <Sparkles className="h-4 w-4 mr-1" />
+                Sign Up Free
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show different content based on whether they can still read articles
   if (canReadFreeArticle()) {

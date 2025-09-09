@@ -26,6 +26,14 @@ export const useFreeArticle = () => {
     localStorage.removeItem(FREE_ARTICLES_KEY);
   };
 
+  // Clear localStorage on development/testing (remove this in production)
+  useEffect(() => {
+    if (window.location.hostname === 'localhost' || window.location.hostname.includes('preview')) {
+      // Uncomment the next line to reset for testing
+      // localStorage.removeItem(FREE_ARTICLES_KEY);
+    }
+  }, []);
+
   return {
     guestArticlesUsed,
     canReadFreeArticle,
