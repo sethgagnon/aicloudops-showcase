@@ -47,6 +47,95 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_index: number
+          poll_id: string
+          user_id: string | null
+          voter_ip: unknown | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_index: number
+          poll_id: string
+          user_id?: string | null
+          voter_ip?: unknown | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_index?: number
+          poll_id?: string
+          user_id?: string | null
+          voter_ip?: unknown | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          ai_generated: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          linkedin_content: string | null
+          linkedin_post_id: string | null
+          linkedin_posted_at: string | null
+          options: Json
+          status: string
+          title: string
+          total_votes: number
+          updated_at: string
+          week_of: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          linkedin_content?: string | null
+          linkedin_post_id?: string | null
+          linkedin_posted_at?: string | null
+          options?: Json
+          status?: string
+          title: string
+          total_votes?: number
+          updated_at?: string
+          week_of?: string
+        }
+        Update: {
+          ai_generated?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          linkedin_content?: string | null
+          linkedin_post_id?: string | null
+          linkedin_posted_at?: string | null
+          options?: Json
+          status?: string
+          title?: string
+          total_votes?: number
+          updated_at?: string
+          week_of?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           author_id: string
