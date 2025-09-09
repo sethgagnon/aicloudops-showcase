@@ -19,6 +19,14 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
+    let theme = '';
+    try {
+      const body = await req.json();
+      theme = (body?.theme || '').toString().trim();
+    } catch (_) {
+      // no body provided
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -26,22 +34,8 @@ serve(async (req) => {
     // Get current week date
     const currentWeek = new Date().toISOString().split('T')[0];
 
-    // Check if we already have a poll for this week
-    const { data: existingPoll } = await supabase
-      .from('polls')
-      .select('id')
-      .eq('week_of', currentWeek)
-      .maybeSingle();
+    // Note: allow multiple drafts per week; only one poll can be live at a time
 
-    if (existingPoll) {
-      return new Response(
-        JSON.stringify({ error: 'A poll already exists for this week' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
 
     // Generate AI poll using GPT-5
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -55,18 +49,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Create a weekly poll for an AI Cloud Ops blog. Return ONLY valid JSON in this exact format:
-{
-  "title": "Poll question here",
-  "description": "Brief context (can be null)",
-  "options": ["Option A", "Option B", "Option C", "Option D"]
-}
-
-Topics: AI, Cloud Computing, DevOps, Tech Leadership. Make it engaging and professional.`
+            content: `Create a weekly poll for an AI Cloud Ops blog. Return ONLY valid JSON in this exact format:\n{\n  "title": "Poll question here",\n  "description": "Brief context (can be null)",\n  "options": ["Option A", "Option B", "Option C", "Option D"]\n}\n\nTopics: AI, Cloud Computing, DevOps, Tech Leadership. Make it engaging and professional. If a theme is provided, align the poll with it exactly.`
           },
           {
             role: 'user',
-            content: 'Generate one poll about current AI or cloud trends. Be concise and direct.'
+            content: `${theme ? `Theme: ${theme}. ` : ''}Generate one poll about current AI or cloud trends. Be concise and return ONLY the JSON.`
           }
         ],
         max_completion_tokens: 800,
@@ -102,7 +89,7 @@ Topics: AI, Cloud Computing, DevOps, Tech Leadership. Make it engaging and profe
       .from('polls')
       .insert({
         title: pollData.title,
-        description: pollData.description,
+        description: pollData.description ?? (theme ? `Theme: ${theme}` : null),
         options: pollData.options,
         week_of: currentWeek,
         ai_generated: true,

@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
 import { Bot, Calendar, Users, Trash2, Play, Pause, RefreshCw, Sparkles } from 'lucide-react';
@@ -29,6 +30,7 @@ const AdminPolls = () => {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [theme, setTheme] = useState('');
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -79,7 +81,9 @@ const AdminPolls = () => {
   const generateWeeklyPoll = async () => {
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-weekly-poll');
+      const { data, error } = await supabase.functions.invoke('generate-weekly-poll', {
+        body: { theme },
+      });
 
       if (error) throw error;
 
@@ -223,23 +227,31 @@ const AdminPolls = () => {
               Generate AI-powered polls and manage weekly community engagement
             </p>
           </div>
-          <Button 
-            onClick={generateWeeklyPoll}
-            disabled={generating}
-            className="gradient-hero"
-          >
-            {generating ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate AI Poll
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Input
+              placeholder="Theme (e.g., AI in FinOps)"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="w-64"
+            />
+            <Button 
+              onClick={generateWeeklyPoll}
+              disabled={generating}
+              className="gradient-hero"
+            >
+              {generating ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate AI Poll
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
