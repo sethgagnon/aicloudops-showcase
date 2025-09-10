@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3, TrendingUp } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3, TrendingUp, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -145,12 +145,6 @@ const Admin = () => {
       
       <main className="py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Debug info */}
-          <div className="mb-4 p-4 bg-muted/50 rounded-lg text-sm">
-            <p>User: {user?.email}</p>
-            <p>Is Admin: {isAdmin ? 'Yes' : 'No'}</p>
-            <p>Loading: {authLoading ? 'Yes' : 'No'}</p>
-          </div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
@@ -177,6 +171,13 @@ const Admin = () => {
                     Users
                   </button>
                   <button
+                    onClick={() => navigate('/admin/analytics')}
+                    className="btn-outline inline-flex items-center"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analytics
+                  </button>
+                  <button
                     onClick={() => navigate('/admin/polls')}
                     className="btn-outline inline-flex items-center"
                   >
@@ -184,26 +185,23 @@ const Admin = () => {
                     Polls
                   </button>
                   <button
-                    onClick={() => {
-                      console.log('SEO Audit button clicked, navigating to /admin/seo-audit');
-                      navigate('/admin/seo-audit');
-                    }}
+                    onClick={() => navigate('/admin/seo-audit')}
                     className="btn-outline inline-flex items-center"
                   >
-                    <BarChart3 className="h-4 w-4 mr-2" />
+                    <Search className="h-4 w-4 mr-2" />
                     SEO Audit
                   </button>
                 </>
               )}
-              <button
-                onClick={handleSignOut}
-                className="btn-outline inline-flex items-center"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </button>
-            </div>
-          </div>
+               <button
+                 onClick={handleSignOut}
+                 className="btn-outline inline-flex items-center"
+               >
+                 <LogOut className="h-4 w-4 mr-2" />
+                 Sign Out
+               </button>
+             </div>
+           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
