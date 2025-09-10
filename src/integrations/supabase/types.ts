@@ -453,6 +453,48 @@ export type Database = {
         }
         Relationships: []
       }
+      static_pages: {
+        Row: {
+          canonical: string | null
+          created_at: string
+          id: string
+          keywords: string | null
+          meta_description: string | null
+          og_image: string | null
+          og_type: string | null
+          path: string
+          structured_data: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          canonical?: string | null
+          created_at?: string
+          id?: string
+          keywords?: string | null
+          meta_description?: string | null
+          og_image?: string | null
+          og_type?: string | null
+          path: string
+          structured_data?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          canonical?: string | null
+          created_at?: string
+          id?: string
+          keywords?: string | null
+          meta_description?: string | null
+          og_image?: string | null
+          og_type?: string | null
+          path?: string
+          structured_data?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           created_at: string

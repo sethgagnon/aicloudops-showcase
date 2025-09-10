@@ -343,144 +343,154 @@ ${suggestions.map(s => `- ${s.type.toUpperCase()}: ${s.issue} | Suggestion: ${s.
 Provide optimized versions that address these specific issues while maintaining quality and readability.`;
         break;
 
-      case 'apply-fixes':
-        // Get optimized content first
-        const optimizeResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4.1-2025-04-14',
-            messages: [
-              { 
-                role: 'system', 
-                content: `You are an SEO content optimizer. Based on the analysis suggestions, return optimized content that addresses the specific issues identified.
+        case 'apply-fixes':
+          console.log(`SEO Optimizer: apply-fixes request for ${url}`);
+          
+          const { suggestions, postId, isStaticPage } = body;
+          
+          if (!suggestions || !Array.isArray(suggestions)) {
+            return new Response(
+              JSON.stringify({ error: 'Suggestions array is required' }),
+              { status: 400, headers: corsHeaders }
+            );
+          }
 
-Return format:
-{
-  "optimizedTitle": "improved title based on suggestions",
-  "optimizedMetaDescription": "improved meta description based on suggestions", 
-  "optimizedContent": "improved content based on suggestions",
-  "appliedFixes": [
-    {
-      "type": "title|meta_description|content|keywords|structure",
-      "originalIssue": "original issue description",
-      "appliedFix": "what was changed",
-      "expectedImpact": "expected improvement"
-    }
-  ]
-}`
-              },
-              { 
-                role: 'user', 
-                content: `Based on these SEO analysis suggestions, optimize the content:
+          // Generate optimized content based on suggestions
+          const optimizationPrompt = `
+Based on these SEO suggestions, provide optimized content:
 
-Original Title: ${title}
-Original Meta Description: ${metaDescription || 'Not provided'}
-Original Content: ${content}
-Target Keywords: ${targetKeywords.join(', ')}
-URL: ${url}
+${suggestions.map((s: any, i: number) => `
+${i + 1}. Issue: ${s.issue}
+   Suggestion: ${s.suggestion}
+   Current content: ${s.current_content || 'N/A'}
+`).join('\n')}
 
-SEO Issues to Fix:
-${suggestions.map(s => `- ${s.type.toUpperCase()}: ${s.issue} | Suggestion: ${s.suggestion}`).join('\n')}
+Please provide a JSON response with optimized:
+- title (if title-related suggestions exist)
+- meta_description (if meta description suggestions exist)  
+- content (if content-related suggestions exist)
+- keywords (if keyword-related suggestions exist)
 
-Provide optimized versions that address these specific issues while maintaining quality and readability.`
-              }
-            ],
-            max_tokens: 2500,
-            temperature: 0.3,
-          }),
-        });
+Focus only on the areas mentioned in the suggestions. Keep the tone professional and maintain the original meaning while optimizing for SEO.
+          `;
 
-        if (!optimizeResponse.ok) {
-          throw new Error('Failed to generate optimized content');
-        }
+          const optimizationResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                { 
+                  role: 'system', 
+                  content: 'You are an SEO optimization expert. Provide JSON responses with optimized content based on suggestions.' 
+                },
+                { role: 'user', content: optimizationPrompt }
+              ],
+              max_tokens: 1500,
+              temperature: 0.7,
+            }),
+          });
 
-        const optimizedResult = await optimizeResponse.json();
-        let optimizedData;
-        try {
-          optimizedData = JSON.parse(optimizedResult.choices[0].message.content);
-        } catch (parseError) {
-          throw new Error('Failed to parse optimized content');
-        }
+          if (!optimizationResponse.ok) {
+            console.error('OpenAI API error:', await optimizationResponse.text());
+            return new Response(
+              JSON.stringify({ error: 'Failed to generate optimized content' }),
+              { status: 500, headers: corsHeaders }
+            );
+          }
 
-        // If postId is provided, update the blog post
-        if (postId && postId !== 'custom') {
-          try {
-            // First, create a backup
-            const { data: currentPost, error: fetchError } = await supabase
-              .from('posts')
-              .select('*')
-              .eq('id', postId)
-              .single();
+          const optimizationData = await optimizationResponse.json();
+          const optimizedContent = JSON.parse(optimizationData.choices[0].message.content);
 
-            if (fetchError) {
-              throw new Error('Failed to fetch current post for backup');
+          // Handle static pages
+          if (isStaticPage) {
+            console.log(`Updating static page ${url} with optimized content`);
+            
+            const updateData: any = {};
+            if (optimizedContent.title) updateData.title = optimizedContent.title;
+            if (optimizedContent.meta_description) updateData.meta_description = optimizedContent.meta_description;
+            if (optimizedContent.keywords) updateData.keywords = optimizedContent.keywords;
+
+            const { error: updateError } = await supabase
+              .from('static_pages')
+              .update(updateData)
+              .eq('path', url);
+
+            if (updateError) {
+              console.error('Error updating static page:', updateError);
+              return new Response(
+                JSON.stringify({ error: 'Failed to update static page' }),
+                { status: 500, headers: corsHeaders }
+              );
             }
 
-            // Store backup in content_suggestions table
-            await supabase
+            return new Response(
+              JSON.stringify({ 
+                success: true,
+                optimizedContent,
+                message: 'Static page SEO updated successfully'
+              }),
+              { headers: corsHeaders }
+            );
+          }
+
+          // Handle blog posts
+          if (postId) {
+            console.log(`Updating blog post ${postId} with optimized content`);
+            
+            // Create backup in content_suggestions table
+            const { error: backupError } = await supabase
               .from('content_suggestions')
               .insert({
                 post_id: postId,
-                suggestion_type: 'seo_optimization_backup',
+                suggestion_type: 'seo_optimization',
                 original_text: JSON.stringify({
-                  title: currentPost.title,
-                  excerpt: currentPost.excerpt,
-                  content: currentPost.content
+                  title: body.title,
+                  excerpt: body.meta_description,
+                  content: body.content
                 }),
-                suggested_text: JSON.stringify(optimizedData),
+                suggested_text: JSON.stringify(optimizedContent),
                 status: 'applied',
                 applied_at: new Date().toISOString(),
-                confidence_score: 0.95
+                confidence_score: 0.85
               });
 
-            // Update the post
+            if (backupError) {
+              console.error('Error creating content backup:', backupError);
+            }
+
+            // Update the blog post
+            const updateData: any = {};
+            if (optimizedContent.title) updateData.title = optimizedContent.title;
+            if (optimizedContent.meta_description) updateData.excerpt = optimizedContent.meta_description;
+            if (optimizedContent.content) updateData.content = optimizedContent.content;
+
             const { error: updateError } = await supabase
               .from('posts')
-              .update({
-                title: optimizedData.optimizedTitle || currentPost.title,
-                excerpt: optimizedData.optimizedMetaDescription || currentPost.excerpt,
-                content: optimizedData.optimizedContent || currentPost.content,
-                updated_at: new Date().toISOString()
-              })
+              .update(updateData)
               .eq('id', postId);
 
             if (updateError) {
-              throw new Error('Failed to update post: ' + updateError.message);
+              console.error('Error updating post:', updateError);
+              return new Response(
+                JSON.stringify({ error: 'Failed to update blog post' }),
+                { status: 500, headers: corsHeaders }
+              );
             }
-
-            return new Response(JSON.stringify({
-              success: true,
-              data: {
-                message: 'SEO fixes applied successfully to blog post',
-                optimizedContent: optimizedData,
-                backupCreated: true,
-                postUpdated: true
-              }
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          } catch (error) {
-            console.error('Error applying fixes to post:', error);
-            throw new Error('Failed to apply fixes to blog post: ' + error.message);
           }
-        } else {
-          // Just return the optimized content for preview/manual application
-          return new Response(JSON.stringify({
-            success: true,
-            data: {
-              message: 'Optimized content generated (preview mode)',
-              optimizedContent: optimizedData,
-              backupCreated: false,
-              postUpdated: false
-            }
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
+
+          return new Response(
+            JSON.stringify({ 
+              success: true,
+              optimizedContent,
+              message: postId ? 'Blog post updated successfully' : 'Optimized content generated'
+            }),
+            { headers: corsHeaders }
+          );
+        
 
       default:
         throw new Error('Invalid action specified');

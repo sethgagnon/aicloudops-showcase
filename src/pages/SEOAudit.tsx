@@ -47,12 +47,13 @@ const SEOAudit = () => {
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isBulkAnalyzing, setIsBulkAnalyzing] = useState(false);
-  const [sitePages, setSitePages] = useState<Array<{url: string, title: string, content: string, type: 'post' | 'page', id?: string}>>([]);
+  const [sitePages, setSitePages] = useState<Array<{url: string, title: string, content: string, type: 'post' | 'page', id?: string, isStatic?: boolean, metaDescription?: string, keywords?: string}>>([]);
   const [selectedPageUrl, setSelectedPageUrl] = useState('');
   const [fixPreviewOpen, setFixPreviewOpen] = useState(false);
   const [selectedAnalysisForFix, setSelectedAnalysisForFix] = useState<any>(null);
   const [proposalEdits, setProposalEdits] = useState<Record<string, string>>({});
   const [showProposals, setShowProposals] = useState<Record<string, boolean>>({});
+  const [isApplyingFix, setIsApplyingFix] = useState(false);
   const [applyingIndividualFix, setApplyingIndividualFix] = useState<Record<string, boolean>>({});
   const [appliedFixes, setAppliedFixes] = useState<Record<string, boolean>>({});
   const [auditForm, setAuditForm] = useState({
@@ -95,37 +96,40 @@ const SEOAudit = () => {
 
   const fetchSitePages = async () => {
     try {
-      // Fetch published posts
-      const { data: posts, error } = await supabase
+      // Fetch published blog posts
+      const { data: posts } = await supabase
         .from('posts')
-        .select('id, title, slug, excerpt, content')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
+        .select('id, title, slug, excerpt')
+        .eq('status', 'published');
 
-      if (error) throw error;
+      const blogPages = posts?.map(post => ({
+        url: `/blog/${post.slug}`,
+        title: post.title,
+        metaDescription: post.excerpt || '',
+        content: '', // We'd need to fetch full content if needed
+        isStatic: false,
+        type: 'post' as const,
+        id: post.id
+      })) || [];
 
-      const siteUrl = window.location.origin;
-      const pages = [
-        // Static pages
-        { url: siteUrl, title: 'Home Page', content: 'AI Cloud Ops - Leadership and insights in cloud computing and artificial intelligence', type: 'page' as const },
-        { url: `${siteUrl}/about`, title: 'About Us', content: 'Learn about our mission and expertise in cloud operations and AI leadership', type: 'page' as const },
-        { url: `${siteUrl}/blog`, title: 'Blog', content: 'Latest insights on AI, cloud computing, and technology leadership', type: 'page' as const },
-        { url: `${siteUrl}/contact`, title: 'Contact', content: 'Get in touch with our team for consulting and collaboration opportunities', type: 'page' as const },
-        { url: `${siteUrl}/polls`, title: 'Polls', content: 'Participate in industry polls and surveys about AI and cloud computing trends', type: 'page' as const },
-        // Published posts
-        ...(posts || []).map(post => ({
-          url: `${siteUrl}/blog/${post.slug}`,
-          title: post.title,
-          content: post.content || post.excerpt || '',
-          type: 'post' as const,
-          id: post.id
-        }))
-      ];
+      // Fetch static pages from database
+      const { data: staticPagesData } = await supabase
+        .from('static_pages')
+        .select('*');
 
-      setSitePages(pages);
+      const staticPages = staticPagesData?.map(page => ({
+        url: page.path,
+        title: page.title,
+        metaDescription: page.meta_description || '',
+        content: '',
+        isStatic: true,
+        type: 'page' as const,
+        keywords: page.keywords
+      })) || [];
+
+      setSitePages([...staticPages, ...blogPages]);
     } catch (error) {
       console.error('Error fetching site pages:', error);
-      toast.error('Failed to load site pages');
     }
   };
 
@@ -298,31 +302,37 @@ const SEOAudit = () => {
     try {
       const fixToApply = proposalEdits[suggestionKey] || suggestion.proposedFix || suggestion.suggestion;
       
-      // Find the corresponding post ID if this is a blog post
-      const matchingPage = sitePages.find(page => page.url === currentAnalysis.url);
-      const postId = matchingPage?.type === 'post' ? matchingPage.id : undefined;
+      // Determine if this is a static page or blog post
+      const isStaticPage = !currentAnalysis.url.includes('/blog/');
+      const postId = isStaticPage ? undefined : 
+        sitePages.find(page => page.url === currentAnalysis.url)?.id;
       
       const { data, error } = await supabase.functions.invoke('seo-optimizer', {
         body: {
           action: 'apply-fixes',
           url: currentAnalysis.url,
-          postId,
           suggestions: [{
             ...suggestion,
             suggestion: fixToApply
-          }]
+          }],
+          postId,
+          isStaticPage,
+          title: currentAnalysis.title,
+          meta_description: currentAnalysis.meta_description,
+          content: currentAnalysis.content
         }
       });
 
       if (error) throw error;
 
       setAppliedFixes(prev => ({ ...prev, [suggestionKey]: true }));
-      toast.success('SEO fix applied successfully!');
+      toast.success(`SEO fix applied successfully to ${isStaticPage ? 'static page' : 'blog post'}!`);
       
       // Refresh analysis if needed
-      if (postId) {
+      if (postId || isStaticPage) {
         fetchAnalyses();
       }
+      
     } catch (error) {
       console.error('Error applying individual fix:', error);
       toast.error('Failed to apply SEO fix');

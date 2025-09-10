@@ -79,15 +79,20 @@ const SEOFixPreview = ({ open, onOpenChange, analysis, postId, onFixesApplied }:
 
     setIsApplying(true);
     try {
+      // Determine if this is a static page or blog post
+      const isStaticPage = !analysis.url.includes('/blog/');
+      const postId = isStaticPage ? undefined : analysis.url.split('/blog/')[1];
+
       const { data, error } = await supabase.functions.invoke('seo-optimizer', {
         body: {
           action: 'apply-fixes',
           url: analysis.url,
-          title: analysis.title,
-          metaDescription: analysis.meta_description,
-          content: analysis.content,
           suggestions: analysis.suggestions,
-          postId: postId
+          postId,
+          isStaticPage,
+          title: analysis.title,
+          meta_description: analysis.meta_description,
+          content: analysis.content
         }
       });
 
