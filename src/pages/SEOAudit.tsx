@@ -51,6 +51,7 @@ const SEOAudit = () => {
   const [fixPreviewOpen, setFixPreviewOpen] = useState(false);
   const [selectedAnalysisForFix, setSelectedAnalysisForFix] = useState<any>(null);
   const [proposalEdits, setProposalEdits] = useState<Record<string, string>>({});
+  const [showProposals, setShowProposals] = useState<Record<string, boolean>>({});
   const [auditForm, setAuditForm] = useState({
     url: '',
     title: '',
@@ -522,7 +523,14 @@ const SEOAudit = () => {
                         {currentAnalysis.suggestions.map((suggestion: SEOSuggestion, index: number) => {
                           const suggestionKey = `${currentAnalysis.url}-${index}`;
                           const hasEditedProposal = proposalEdits[suggestionKey];
-                          const [showProposal, setShowProposal] = useState(false);
+                          const showProposal = showProposals[suggestionKey] || false;
+                          
+                          const toggleProposal = () => {
+                            setShowProposals(prev => ({
+                              ...prev,
+                              [suggestionKey]: !prev[suggestionKey]
+                            }));
+                          };
                           
                           return (
                             <div key={index} className="border rounded-lg p-4 space-y-2">
@@ -535,7 +543,7 @@ const SEOAudit = () => {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => setShowProposal(!showProposal)}
+                                    onClick={toggleProposal}
                                     className="text-xs"
                                   >
                                     {showProposal ? 'Hide' : 'Edit'} Proposal
