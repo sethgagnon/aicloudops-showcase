@@ -39,6 +39,7 @@ interface SEOSuggestion {
 const SEOAudit = () => {
   const { user, loading } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
   const [analyses, setAnalyses] = useState<SEOAnalysis[]>([]);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -67,12 +68,17 @@ const SEOAudit = () => {
           }
         } catch (error) {
           console.error('Error checking user role:', error);
+          setUserRole('user');
+        } finally {
+          setRoleLoading(false);
         }
+      } else if (!loading) {
+        setRoleLoading(false);
       }
     };
     
     checkUserRole();
-  }, [user]);
+  }, [user, loading]);
 
   const fetchAnalyses = async () => {
     try {
@@ -152,7 +158,7 @@ const SEOAudit = () => {
     return 'text-red-600';
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
