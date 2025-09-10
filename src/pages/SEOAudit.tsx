@@ -53,6 +53,8 @@ const SEOAudit = () => {
   const [selectedAnalysisForFix, setSelectedAnalysisForFix] = useState<any>(null);
   const [proposalEdits, setProposalEdits] = useState<Record<string, string>>({});
   const [showProposals, setShowProposals] = useState<Record<string, boolean>>({});
+  const [applyingIndividualFix, setApplyingIndividualFix] = useState<Record<string, boolean>>({});
+  const [appliedFixes, setAppliedFixes] = useState<Record<string, boolean>>({});
   const [auditForm, setAuditForm] = useState({
     url: '',
     title: '',
@@ -282,6 +284,50 @@ const SEOAudit = () => {
     // Reset current analysis if it was the one being fixed
     if (selectedAnalysisForFix && currentAnalysis?.url === selectedAnalysisForFix.url) {
       setCurrentAnalysis(null);
+    }
+  };
+
+  const applyIndividualFix = async (suggestionIndex: number) => {
+    if (!currentAnalysis) return;
+    
+    const suggestionKey = `${currentAnalysis.url}-${suggestionIndex}`;
+    const suggestion = currentAnalysis.suggestions[suggestionIndex];
+    
+    setApplyingIndividualFix(prev => ({ ...prev, [suggestionKey]: true }));
+    
+    try {
+      const fixToApply = proposalEdits[suggestionKey] || suggestion.proposedFix || suggestion.suggestion;
+      
+      // Find the corresponding post ID if this is a blog post
+      const matchingPage = sitePages.find(page => page.url === currentAnalysis.url);
+      const postId = matchingPage?.type === 'post' ? matchingPage.id : undefined;
+      
+      const { data, error } = await supabase.functions.invoke('seo-optimizer', {
+        body: {
+          action: 'apply-fixes',
+          url: currentAnalysis.url,
+          postId,
+          suggestions: [{
+            ...suggestion,
+            suggestion: fixToApply
+          }]
+        }
+      });
+
+      if (error) throw error;
+
+      setAppliedFixes(prev => ({ ...prev, [suggestionKey]: true }));
+      toast.success('SEO fix applied successfully!');
+      
+      // Refresh analysis if needed
+      if (postId) {
+        fetchAnalyses();
+      }
+    } catch (error) {
+      console.error('Error applying individual fix:', error);
+      toast.error('Failed to apply SEO fix');
+    } finally {
+      setApplyingIndividualFix(prev => ({ ...prev, [suggestionKey]: false }));
     }
   };
 
@@ -529,7 +575,7 @@ const SEOAudit = () => {
                           variant="default"
                         >
                           <Sparkles className="h-4 w-4" />
-                          Apply SEO Fixes
+                          Apply All SEO Fixes
                         </Button>
                       </div>
                       
@@ -613,6 +659,30 @@ const SEOAudit = () => {
                                       "This proposal will be used when applying SEO fixes"
                                     }
                                   </p>
+                                  <div className="flex gap-2 mt-3">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => applyIndividualFix(index)}
+                                      disabled={applyingIndividualFix[suggestionKey] || appliedFixes[suggestionKey]}
+                                      className="flex-1"
+                                    >
+                                      {applyingIndividualFix[suggestionKey] ? (
+                                        <>
+                                          <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-1"></div>
+                                          Applying...
+                                        </>
+                                      ) : appliedFixes[suggestionKey] ? (
+                                        '✓ Applied'
+                                      ) : (
+                                        'Apply This Fix'
+                                      )}
+                                    </Button>
+                                    {appliedFixes[suggestionKey] && (
+                                      <Badge variant="default" className="bg-green-600">
+                                        Applied
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
