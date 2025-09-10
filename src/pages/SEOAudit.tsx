@@ -13,8 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, CheckCircle, Zap, Search, TrendingUp, FileText, Globe } from 'lucide-react';
+import { AlertCircle, CheckCircle, Zap, Search, TrendingUp, FileText, Globe, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import SEOFixPreview from '@/components/SEOFixPreview';
 
 interface SEOAnalysis {
   id: string;
@@ -45,8 +46,10 @@ const SEOAudit = () => {
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isBulkAnalyzing, setIsBulkAnalyzing] = useState(false);
-  const [sitePages, setSitePages] = useState<Array<{url: string, title: string, content: string, type: 'post' | 'page'}>>([]);
+  const [sitePages, setSitePages] = useState<Array<{url: string, title: string, content: string, type: 'post' | 'page', id?: string}>>([]);
   const [selectedPageUrl, setSelectedPageUrl] = useState('');
+  const [fixPreviewOpen, setFixPreviewOpen] = useState(false);
+  const [selectedAnalysisForFix, setSelectedAnalysisForFix] = useState<any>(null);
   const [auditForm, setAuditForm] = useState({
     url: '',
     title: '',
@@ -90,7 +93,7 @@ const SEOAudit = () => {
       // Fetch published posts
       const { data: posts, error } = await supabase
         .from('posts')
-        .select('title, slug, excerpt, content')
+        .select('id, title, slug, excerpt, content')
         .eq('status', 'published')
         .order('created_at', { ascending: false });
 
@@ -109,7 +112,8 @@ const SEOAudit = () => {
           url: `${siteUrl}/blog/${post.slug}`,
           title: post.title,
           content: post.excerpt || post.content?.substring(0, 300) || '',
-          type: 'post' as const
+          type: 'post' as const,
+          id: post.id
         }))
       ];
 
@@ -240,6 +244,27 @@ const SEOAudit = () => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
+  };
+
+  const openFixPreview = (analysis: SEOAnalysis) => {
+    // Find the corresponding post ID if this is a blog post
+    const matchingPage = sitePages.find(page => page.url === analysis.url);
+    const postId = matchingPage?.type === 'post' ? matchingPage.id : undefined;
+    
+    setSelectedAnalysisForFix({
+      ...analysis,
+      postId
+    });
+    setFixPreviewOpen(true);
+  };
+
+  const handleFixesApplied = () => {
+    // Refresh analyses after fixes are applied
+    fetchAnalyses();
+    // Reset current analysis if it was the one being fixed
+    if (selectedAnalysisForFix && currentAnalysis?.url === selectedAnalysisForFix.url) {
+      setCurrentAnalysis(null);
+    }
   };
 
   if (loading || roleLoading) {
@@ -464,11 +489,22 @@ const SEOAudit = () => {
 
                   {/* Suggestions */}
                   {currentAnalysis.suggestions && currentAnalysis.suggestions.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5" />
-                        Recommendations
-                      </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5" />
+                          Recommendations ({currentAnalysis.suggestions.length})
+                        </h3>
+                        <Button 
+                          onClick={() => openFixPreview(currentAnalysis)}
+                          className="flex items-center gap-2"
+                          variant="default"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Apply SEO Fixes
+                        </Button>
+                      </div>
+                      
                       <div className="space-y-3">
                         {currentAnalysis.suggestions.map((suggestion: SEOSuggestion, index: number) => (
                           <div key={index} className="border rounded-lg p-4 space-y-2">
@@ -532,24 +568,42 @@ const SEOAudit = () => {
                             <h3 className="font-medium">{analysis.title}</h3>
                             <Badge variant="outline">{analysis.seo_score}/100</Badge>
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(analysis.created_at).toLocaleDateString()}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(analysis.created_at).toLocaleDateString()}
+                            </span>
+                            {analysis.suggestions && analysis.suggestions.length > 0 && (
+                              <Button 
+                                onClick={() => openFixPreview(analysis)}
+                                size="sm"
+                                variant="outline"
+                                className="flex items-center gap-1"
+                              >
+                                <Sparkles className="h-3 w-3" />
+                                Fix Issues
+                              </Button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">{analysis.url}</p>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div className="grid grid-cols-3 gap-4 text-sm mb-2">
                           <div>Title: <span className={getScoreColor(analysis.title_score)}>{analysis.title_score}</span></div>
                           <div>Meta: <span className={getScoreColor(analysis.meta_description_score)}>{analysis.meta_description_score}</span></div>
                           <div>Content: <span className={getScoreColor(analysis.content_score)}>{analysis.content_score}</span></div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    No analyses yet. Run your first SEO analysis to see results here.
-                  </p>
-                )}
+                        {analysis.suggestions && analysis.suggestions.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {analysis.suggestions.length} improvement suggestions available
+                          </p>
+                        )}
+                       </div>
+                     ))}
+                   </div>
+                 ) : (
+                   <p className="text-center text-muted-foreground py-8">
+                     No analyses yet. Run your first SEO analysis to see results here.
+                   </p>
+                 )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -639,6 +693,16 @@ const SEOAudit = () => {
       </main>
       
       <Footer />
+      
+      {selectedAnalysisForFix && (
+        <SEOFixPreview
+          open={fixPreviewOpen}
+          onOpenChange={setFixPreviewOpen}
+          analysis={selectedAnalysisForFix}
+          postId={selectedAnalysisForFix.postId}
+          onFixesApplied={handleFixesApplied}
+        />
+      )}
     </div>
   );
 };

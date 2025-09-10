@@ -12,13 +12,21 @@ interface SEOAnalysisRequest {
   title?: string;
   metaDescription?: string;
   content?: string;
-  action: 'analyze' | 'suggest' | 'optimize' | 'audit' | 'bulk-analyze';
+  action: 'analyze' | 'suggest' | 'optimize' | 'audit' | 'bulk-analyze' | 'apply-fixes' | 'get-optimized-content';
   targetKeywords?: string[];
   pages?: Array<{
     url: string;
     title: string;
     content: string;
     type: 'post' | 'page';
+  }>;
+  postId?: string;
+  suggestions?: Array<{
+    type: string;
+    priority: string;
+    issue: string;
+    suggestion: string;
+    impact: string;
   }>;
 }
 
@@ -45,7 +53,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { url, title, metaDescription, content, action, targetKeywords = [], pages = [] } = await req.json() as SEOAnalysisRequest;
+    const { url, title, metaDescription, content, action, targetKeywords = [], pages = [], postId, suggestions = [] } = await req.json() as SEOAnalysisRequest;
 
     console.log(`SEO Optimizer: ${action} request${action === 'bulk-analyze' ? ` for ${pages.length} pages` : ` for ${url}`}`);
 
@@ -294,6 +302,177 @@ Focus on: title length (50-60 chars), content structure, readability, and missin
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+
+      case 'get-optimized-content':
+        systemPrompt = `You are an SEO content optimizer. Based on the analysis suggestions, return optimized content that addresses the specific issues identified.
+
+Return format:
+{
+  "optimizedTitle": "improved title based on suggestions",
+  "optimizedMetaDescription": "improved meta description based on suggestions", 
+  "optimizedContent": "improved content based on suggestions",
+  "appliedFixes": [
+    {
+      "type": "title|meta_description|content|keywords|structure",
+      "originalIssue": "original issue description",
+      "appliedFix": "what was changed",
+      "expectedImpact": "expected improvement"
+    }
+  ]
+}`;
+
+        userPrompt = `Based on these SEO analysis suggestions, optimize the content:
+
+Original Title: ${title}
+Original Meta Description: ${metaDescription || 'Not provided'}
+Original Content: ${content}
+Target Keywords: ${targetKeywords.join(', ')}
+URL: ${url}
+
+SEO Issues to Fix:
+${suggestions.map(s => `- ${s.type.toUpperCase()}: ${s.issue} | Suggestion: ${s.suggestion}`).join('\n')}
+
+Provide optimized versions that address these specific issues while maintaining quality and readability.`;
+        break;
+
+      case 'apply-fixes':
+        // Get optimized content first
+        const optimizeResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4.1-2025-04-14',
+            messages: [
+              { 
+                role: 'system', 
+                content: `You are an SEO content optimizer. Based on the analysis suggestions, return optimized content that addresses the specific issues identified.
+
+Return format:
+{
+  "optimizedTitle": "improved title based on suggestions",
+  "optimizedMetaDescription": "improved meta description based on suggestions", 
+  "optimizedContent": "improved content based on suggestions",
+  "appliedFixes": [
+    {
+      "type": "title|meta_description|content|keywords|structure",
+      "originalIssue": "original issue description",
+      "appliedFix": "what was changed",
+      "expectedImpact": "expected improvement"
+    }
+  ]
+}`
+              },
+              { 
+                role: 'user', 
+                content: `Based on these SEO analysis suggestions, optimize the content:
+
+Original Title: ${title}
+Original Meta Description: ${metaDescription || 'Not provided'}
+Original Content: ${content}
+Target Keywords: ${targetKeywords.join(', ')}
+URL: ${url}
+
+SEO Issues to Fix:
+${suggestions.map(s => `- ${s.type.toUpperCase()}: ${s.issue} | Suggestion: ${s.suggestion}`).join('\n')}
+
+Provide optimized versions that address these specific issues while maintaining quality and readability.`
+              }
+            ],
+            max_tokens: 2500,
+            temperature: 0.3,
+          }),
+        });
+
+        if (!optimizeResponse.ok) {
+          throw new Error('Failed to generate optimized content');
+        }
+
+        const optimizedResult = await optimizeResponse.json();
+        let optimizedData;
+        try {
+          optimizedData = JSON.parse(optimizedResult.choices[0].message.content);
+        } catch (parseError) {
+          throw new Error('Failed to parse optimized content');
+        }
+
+        // If postId is provided, update the blog post
+        if (postId && postId !== 'custom') {
+          try {
+            // First, create a backup
+            const { data: currentPost, error: fetchError } = await supabase
+              .from('posts')
+              .select('*')
+              .eq('id', postId)
+              .single();
+
+            if (fetchError) {
+              throw new Error('Failed to fetch current post for backup');
+            }
+
+            // Store backup in content_suggestions table
+            await supabase
+              .from('content_suggestions')
+              .insert({
+                post_id: postId,
+                suggestion_type: 'seo_optimization_backup',
+                original_text: JSON.stringify({
+                  title: currentPost.title,
+                  excerpt: currentPost.excerpt,
+                  content: currentPost.content
+                }),
+                suggested_text: JSON.stringify(optimizedData),
+                status: 'applied',
+                applied_at: new Date().toISOString(),
+                confidence_score: 0.95
+              });
+
+            // Update the post
+            const { error: updateError } = await supabase
+              .from('posts')
+              .update({
+                title: optimizedData.optimizedTitle || currentPost.title,
+                excerpt: optimizedData.optimizedMetaDescription || currentPost.excerpt,
+                content: optimizedData.optimizedContent || currentPost.content,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', postId);
+
+            if (updateError) {
+              throw new Error('Failed to update post: ' + updateError.message);
+            }
+
+            return new Response(JSON.stringify({
+              success: true,
+              data: {
+                message: 'SEO fixes applied successfully to blog post',
+                optimizedContent: optimizedData,
+                backupCreated: true,
+                postUpdated: true
+              }
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          } catch (error) {
+            console.error('Error applying fixes to post:', error);
+            throw new Error('Failed to apply fixes to blog post: ' + error.message);
+          }
+        } else {
+          // Just return the optimized content for preview/manual application
+          return new Response(JSON.stringify({
+            success: true,
+            data: {
+              message: 'Optimized content generated (preview mode)',
+              optimizedContent: optimizedData,
+              backupCreated: false,
+              postUpdated: false
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
 
       default:
         throw new Error('Invalid action specified');
