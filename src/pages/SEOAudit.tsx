@@ -50,6 +50,7 @@ const SEOAudit = () => {
   const [selectedPageUrl, setSelectedPageUrl] = useState('');
   const [fixPreviewOpen, setFixPreviewOpen] = useState(false);
   const [selectedAnalysisForFix, setSelectedAnalysisForFix] = useState<any>(null);
+  const [proposalEdits, setProposalEdits] = useState<Record<string, string>>({});
   const [auditForm, setAuditForm] = useState({
     url: '',
     title: '',
@@ -251,8 +252,20 @@ const SEOAudit = () => {
     const matchingPage = sitePages.find(page => page.url === analysis.url);
     const postId = matchingPage?.type === 'post' ? matchingPage.id : undefined;
     
+    // Apply any edited proposals to the suggestions
+    const updatedSuggestions = analysis.suggestions.map((suggestion, index) => {
+      const suggestionKey = `${analysis.url}-${index}`;
+      const editedProposal = proposalEdits[suggestionKey];
+      
+      return editedProposal ? {
+        ...suggestion,
+        suggestion: editedProposal
+      } : suggestion;
+    });
+    
     setSelectedAnalysisForFix({
       ...analysis,
+      suggestions: updatedSuggestions,
       postId
     });
     setFixPreviewOpen(true);
@@ -506,30 +519,71 @@ const SEOAudit = () => {
                       </div>
                       
                       <div className="space-y-3">
-                        {currentAnalysis.suggestions.map((suggestion: SEOSuggestion, index: number) => (
-                          <div key={index} className="border rounded-lg p-4 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Badge variant={getSeverityColor(suggestion.priority) as any}>
-                                {suggestion.priority?.toUpperCase()} Priority
-                              </Badge>
-                              <Badge variant="outline">{suggestion.type}</Badge>
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm text-red-600 mb-1">Issue:</p>
-                              <p className="text-sm">{suggestion.issue}</p>
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm text-green-600 mb-1">Solution:</p>
-                              <p className="text-sm">{suggestion.suggestion}</p>
-                            </div>
-                            {suggestion.impact && (
-                              <div>
-                                <p className="font-medium text-sm text-blue-600 mb-1">Expected Impact:</p>
-                                <p className="text-sm text-muted-foreground">{suggestion.impact}</p>
+                        {currentAnalysis.suggestions.map((suggestion: SEOSuggestion, index: number) => {
+                          const suggestionKey = `${currentAnalysis.url}-${index}`;
+                          const hasEditedProposal = proposalEdits[suggestionKey];
+                          const [showProposal, setShowProposal] = useState(false);
+                          
+                          return (
+                            <div key={index} className="border rounded-lg p-4 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Badge variant={getSeverityColor(suggestion.priority) as any}>
+                                  {suggestion.priority?.toUpperCase()} Priority
+                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">{suggestion.type}</Badge>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setShowProposal(!showProposal)}
+                                    className="text-xs"
+                                  >
+                                    {showProposal ? 'Hide' : 'Edit'} Proposal
+                                  </Button>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        ))}
+                              <div>
+                                <p className="font-medium text-sm text-red-600 mb-1">Issue:</p>
+                                <p className="text-sm">{suggestion.issue}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm text-green-600 mb-1">Solution:</p>
+                                <p className="text-sm">{suggestion.suggestion}</p>
+                              </div>
+                              {suggestion.impact && (
+                                <div>
+                                  <p className="font-medium text-sm text-blue-600 mb-1">Expected Impact:</p>
+                                  <p className="text-sm text-muted-foreground">{suggestion.impact}</p>
+                                </div>
+                              )}
+                              
+                              {showProposal && (
+                                <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <p className="font-medium text-sm">Proposed Fix:</p>
+                                    {hasEditedProposal && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        Modified
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <Textarea
+                                    placeholder="Enter your custom fix proposal here..."
+                                    value={proposalEdits[suggestionKey] || suggestion.suggestion}
+                                    onChange={(e) => setProposalEdits(prev => ({
+                                      ...prev,
+                                      [suggestionKey]: e.target.value
+                                    }))}
+                                    className="min-h-[80px]"
+                                  />
+                                  <p className="text-xs text-muted-foreground">
+                                    This proposal will be used when applying SEO fixes
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
