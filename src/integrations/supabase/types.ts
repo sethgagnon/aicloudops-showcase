@@ -143,6 +143,92 @@ export type Database = {
         }
         Relationships: []
       }
+      content_suggestions: {
+        Row: {
+          applied_at: string | null
+          confidence_score: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          original_text: string | null
+          post_id: string | null
+          status: string
+          suggested_text: string
+          suggestion_type: string
+        }
+        Insert: {
+          applied_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          original_text?: string | null
+          post_id?: string | null
+          status?: string
+          suggested_text: string
+          suggestion_type: string
+        }
+        Update: {
+          applied_at?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          original_text?: string | null
+          post_id?: string | null
+          status?: string
+          suggested_text?: string
+          suggestion_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_suggestions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      keyword_tracking: {
+        Row: {
+          created_at: string
+          difficulty_score: number | null
+          id: string
+          keyword: string
+          opportunity_score: number | null
+          position: number | null
+          search_volume: number | null
+          tracked_by: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty_score?: number | null
+          id?: string
+          keyword: string
+          opportunity_score?: number | null
+          position?: number | null
+          search_volume?: number | null
+          tracked_by?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          difficulty_score?: number | null
+          id?: string
+          keyword?: string
+          opportunity_score?: number | null
+          position?: number | null
+          search_volume?: number | null
+          tracked_by?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       poll_votes: {
         Row: {
           created_at: string
@@ -310,6 +396,60 @@ export type Database = {
           role?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      seo_analysis: {
+        Row: {
+          analyzed_by: string | null
+          content: string | null
+          content_score: number | null
+          created_at: string
+          id: string
+          keyword_density: Json | null
+          meta_description: string | null
+          meta_description_score: number | null
+          seo_score: number | null
+          structured_data: Json | null
+          suggestions: Json | null
+          title: string | null
+          title_score: number | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          analyzed_by?: string | null
+          content?: string | null
+          content_score?: number | null
+          created_at?: string
+          id?: string
+          keyword_density?: Json | null
+          meta_description?: string | null
+          meta_description_score?: number | null
+          seo_score?: number | null
+          structured_data?: Json | null
+          suggestions?: Json | null
+          title?: string | null
+          title_score?: number | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          analyzed_by?: string | null
+          content?: string | null
+          content_score?: number | null
+          created_at?: string
+          id?: string
+          keyword_density?: Json | null
+          meta_description?: string | null
+          meta_description_score?: number | null
+          seo_score?: number | null
+          structured_data?: Json | null
+          suggestions?: Json | null
+          title?: string | null
+          title_score?: number | null
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }

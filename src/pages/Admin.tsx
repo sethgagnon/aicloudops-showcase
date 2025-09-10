@@ -179,11 +179,11 @@ const Admin = () => {
                     Polls
                   </button>
                   <button
-                    onClick={() => navigate('/admin/analytics')}
+                    onClick={() => navigate('/admin/seo-audit')}
                     className="btn-outline inline-flex items-center"
                   >
                     <BarChart3 className="h-4 w-4 mr-2" />
-                    Analytics
+                    SEO Audit
                   </button>
                 </>
               )}
