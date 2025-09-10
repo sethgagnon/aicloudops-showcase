@@ -164,8 +164,30 @@ const Analytics = () => {
     return <Navigate to="/auth" replace />
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (userRole !== 'admin') {
-    return <Navigate to="/" replace />
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
+            <p className="text-muted-foreground">You need admin permissions to view analytics.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   const getBestTimeRecommendations = () => {
