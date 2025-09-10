@@ -145,7 +145,12 @@ const Admin = () => {
       
       <main className="py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+          {/* Debug info */}
+          <div className="mb-4 p-4 bg-muted/50 rounded-lg text-sm">
+            <p>User: {user?.email}</p>
+            <p>Is Admin: {isAdmin ? 'Yes' : 'No'}</p>
+            <p>Loading: {authLoading ? 'Yes' : 'No'}</p>
+          </div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
@@ -179,7 +184,10 @@ const Admin = () => {
                     Polls
                   </button>
                   <button
-                    onClick={() => navigate('/admin/seo-audit')}
+                    onClick={() => {
+                      console.log('SEO Audit button clicked, navigating to /admin/seo-audit');
+                      navigate('/admin/seo-audit');
+                    }}
                     className="btn-outline inline-flex items-center"
                   >
                     <BarChart3 className="h-4 w-4 mr-2" />
