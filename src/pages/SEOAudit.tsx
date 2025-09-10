@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle, Zap, Search, TrendingUp, FileText } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertCircle, CheckCircle, Zap, Search, TrendingUp, FileText, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SEOAnalysis {
@@ -43,6 +44,9 @@ const SEOAudit = () => {
   const [analyses, setAnalyses] = useState<SEOAnalysis[]>([]);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isBulkAnalyzing, setIsBulkAnalyzing] = useState(false);
+  const [sitePages, setSitePages] = useState<Array<{url: string, title: string, content: string, type: 'post' | 'page'}>>([]);
+  const [selectedPageUrl, setSelectedPageUrl] = useState('');
   const [auditForm, setAuditForm] = useState({
     url: '',
     title: '',
@@ -65,6 +69,7 @@ const SEOAudit = () => {
           
           if (isAdmin) {
             fetchAnalyses();
+            fetchSitePages();
           }
         } catch (error) {
           console.error('Error checking user role:', error);
@@ -79,6 +84,85 @@ const SEOAudit = () => {
     
     checkUserRole();
   }, [user, loading]);
+
+  const fetchSitePages = async () => {
+    try {
+      // Fetch published posts
+      const { data: posts, error } = await supabase
+        .from('posts')
+        .select('title, slug, excerpt, content')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const siteUrl = window.location.origin;
+      const pages = [
+        // Static pages
+        { url: siteUrl, title: 'Home Page', content: 'AI Cloud Ops - Leadership and insights in cloud computing and artificial intelligence', type: 'page' as const },
+        { url: `${siteUrl}/about`, title: 'About Us', content: 'Learn about our mission and expertise in cloud operations and AI leadership', type: 'page' as const },
+        { url: `${siteUrl}/blog`, title: 'Blog', content: 'Latest insights on AI, cloud computing, and technology leadership', type: 'page' as const },
+        { url: `${siteUrl}/contact`, title: 'Contact', content: 'Get in touch with our team for consulting and collaboration opportunities', type: 'page' as const },
+        { url: `${siteUrl}/polls`, title: 'Polls', content: 'Participate in industry polls and surveys about AI and cloud computing trends', type: 'page' as const },
+        // Published posts
+        ...(posts || []).map(post => ({
+          url: `${siteUrl}/blog/${post.slug}`,
+          title: post.title,
+          content: post.excerpt || post.content?.substring(0, 300) || '',
+          type: 'post' as const
+        }))
+      ];
+
+      setSitePages(pages);
+    } catch (error) {
+      console.error('Error fetching site pages:', error);
+      toast.error('Failed to load site pages');
+    }
+  };
+
+  const handlePageSelect = (pageUrl: string) => {
+    const selectedPage = sitePages.find(page => page.url === pageUrl);
+    if (selectedPage) {
+      setSelectedPageUrl(pageUrl);
+      setAuditForm(prev => ({
+        ...prev,
+        url: selectedPage.url,
+        title: selectedPage.title,
+        content: selectedPage.content
+      }));
+    }
+  };
+
+  const runBulkSiteAnalysis = async () => {
+    setIsBulkAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('seo-optimizer', {
+        body: {
+          action: 'bulk-analyze',
+          pages: sitePages.map(page => ({
+            url: page.url,
+            title: page.title,
+            content: page.content,
+            type: page.type
+          }))
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        await fetchAnalyses(); // Refresh the list
+        toast.success(`Bulk SEO analysis completed for ${sitePages.length} pages!`);
+      } else {
+        throw new Error(data.error || 'Bulk analysis failed');
+      }
+    } catch (error) {
+      console.error('Bulk SEO analysis error:', error);
+      toast.error('Failed to analyze site: ' + error.message);
+    } finally {
+      setIsBulkAnalyzing(false);
+    }
+  };
 
   const fetchAnalyses = async () => {
     try {
@@ -219,6 +303,57 @@ const SEOAudit = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Quick Select from Your Site</label>
+                    <Select onValueChange={handlePageSelect} value={selectedPageUrl}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a page from your site or enter custom URL below" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sitePages.map((page) => (
+                          <SelectItem key={page.url} value={page.url}>
+                            <div className="flex items-center gap-2">
+                              {page.type === 'post' ? <FileText className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+                              {page.title}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={runBulkSiteAnalysis}
+                      disabled={isBulkAnalyzing || sitePages.length === 0}
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      {isBulkAnalyzing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                          Analyzing {sitePages.length} pages...
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="h-4 w-4 mr-2" />
+                          Analyze Entire Site ({sitePages.length} pages)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or analyze custom content</span>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">URL *</label>

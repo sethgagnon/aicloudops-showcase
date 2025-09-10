@@ -8,12 +8,18 @@ const corsHeaders = {
 };
 
 interface SEOAnalysisRequest {
-  url: string;
+  url?: string;
   title?: string;
   metaDescription?: string;
   content?: string;
-  action: 'analyze' | 'suggest' | 'optimize' | 'audit';
+  action: 'analyze' | 'suggest' | 'optimize' | 'audit' | 'bulk-analyze';
   targetKeywords?: string[];
+  pages?: Array<{
+    url: string;
+    title: string;
+    content: string;
+    type: 'post' | 'page';
+  }>;
 }
 
 interface SEOScore {
@@ -39,9 +45,9 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { url, title, metaDescription, content, action, targetKeywords = [] } = await req.json() as SEOAnalysisRequest;
+    const { url, title, metaDescription, content, action, targetKeywords = [], pages = [] } = await req.json() as SEOAnalysisRequest;
 
-    console.log(`SEO Optimizer: ${action} request for ${url}`);
+    console.log(`SEO Optimizer: ${action} request${action === 'bulk-analyze' ? ` for ${pages.length} pages` : ` for ${url}`}`);
 
     let systemPrompt = '';
     let userPrompt = '';
@@ -178,6 +184,116 @@ Target Keywords: ${targetKeywords.join(', ')}
 
 Provide detailed analysis with prioritized recommendations.`;
         break;
+
+      case 'bulk-analyze':
+        // Handle bulk analysis differently - we'll process each page and save results
+        console.log(`Processing bulk analysis for ${pages.length} pages`);
+        
+        const bulkResults = [];
+        for (const page of pages) {
+          try {
+            // Analyze each page individually
+            const pageSystemPrompt = `You are an expert SEO analyst. Analyze the provided content and return a JSON response with SEO scores and actionable suggestions.
+
+Return format:
+{
+  "seoScore": number (0-100),
+  "titleScore": number (0-100),
+  "metaDescriptionScore": number (0-100),
+  "contentScore": number (0-100),
+  "keywordDensity": {"keyword": density_percentage},
+  "suggestions": [
+    {
+      "type": "title|meta_description|content|keywords|structure",
+      "priority": "high|medium|low",
+      "issue": "description of the issue",
+      "suggestion": "specific actionable recommendation",
+      "impact": "expected impact description"
+    }
+  ],
+  "structuredData": {
+    "recommended": "schema.org type",
+    "properties": ["list of recommended properties"]
+  }
+}`;
+
+            const pageUserPrompt = `Analyze this ${page.type} for SEO:
+URL: ${page.url}
+Title: ${page.title}
+Content: ${page.content.substring(0, 2000)}
+
+Focus on: title length (50-60 chars), content structure, readability, and missing elements.`;
+
+            const pageResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${openAIApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'gpt-4.1-2025-04-14',
+                messages: [
+                  { role: 'system', content: pageSystemPrompt },
+                  { role: 'user', content: pageUserPrompt }
+                ],
+                max_tokens: 1500,
+                temperature: 0.3,
+              }),
+            });
+
+            if (pageResponse.ok) {
+              const pageAiResponse = await pageResponse.json();
+              let pageResult;
+              try {
+                pageResult = JSON.parse(pageAiResponse.choices[0].message.content);
+              } catch (parseError) {
+                console.error('Failed to parse AI response for', page.url, parseError);
+                pageResult = { seoScore: 0, error: 'Failed to parse analysis' };
+              }
+
+              // Save to database
+              const { error: dbError } = await supabase
+                .from('seo_analysis')
+                .insert({
+                  url: page.url,
+                  title: page.title,
+                  content: page.content.substring(0, 1000),
+                  seo_score: pageResult.seoScore || 0,
+                  title_score: pageResult.titleScore || 0,
+                  meta_description_score: pageResult.metaDescriptionScore || 0,
+                  content_score: pageResult.contentScore || 0,
+                  keyword_density: pageResult.keywordDensity || {},
+                  suggestions: pageResult.suggestions || [],
+                  structured_data: pageResult.structuredData || {},
+                  analyzed_by: null // Could be set to user ID if needed
+                });
+
+              if (dbError) {
+                console.error('Database error for', page.url, dbError);
+              } else {
+                bulkResults.push({ url: page.url, success: true, score: pageResult.seoScore });
+              }
+            }
+          } catch (error) {
+            console.error('Error analyzing page', page.url, error);
+            bulkResults.push({ url: page.url, success: false, error: error.message });
+          }
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          data: {
+            message: `Bulk analysis completed for ${bulkResults.length} pages`,
+            results: bulkResults,
+            summary: {
+              total: pages.length,
+              successful: bulkResults.filter(r => r.success).length,
+              failed: bulkResults.filter(r => !r.success).length
+            }
+          }
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
 
       default:
         throw new Error('Invalid action specified');
