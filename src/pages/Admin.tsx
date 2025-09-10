@@ -178,6 +178,13 @@ const Admin = () => {
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Polls
                   </button>
+                  <button
+                    onClick={() => navigate('/admin/analytics')}
+                    className="btn-outline inline-flex items-center"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analytics
+                  </button>
                 </>
               )}
               <button
