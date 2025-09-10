@@ -35,6 +35,7 @@ interface SEOSuggestion {
   priority: string;
   issue: string;
   suggestion: string;
+  proposedFix?: string;
   impact: string;
 }
 
@@ -261,7 +262,10 @@ const SEOAudit = () => {
       return editedProposal ? {
         ...suggestion,
         suggestion: editedProposal
-      } : suggestion;
+      } : {
+        ...suggestion,
+        suggestion: suggestion.proposedFix || suggestion.suggestion
+      };
     });
     
     setSelectedAnalysisForFix({
@@ -557,6 +561,15 @@ const SEOAudit = () => {
                               <div>
                                 <p className="font-medium text-sm text-green-600 mb-1">Solution:</p>
                                 <p className="text-sm">{suggestion.suggestion}</p>
+                                {suggestion.proposedFix && (
+                                  <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-950/20 rounded border-l-4 border-blue-400">
+                                    <p className="font-medium text-sm text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-1">
+                                      <Sparkles className="h-3 w-3" />
+                                      AI-Generated Fix:
+                                    </p>
+                                    <p className="text-sm text-blue-800 dark:text-blue-200">{suggestion.proposedFix}</p>
+                                  </div>
+                                )}
                               </div>
                               {suggestion.impact && (
                                 <div>
@@ -577,7 +590,7 @@ const SEOAudit = () => {
                                   </div>
                                   <Textarea
                                     placeholder="Enter your custom fix proposal here..."
-                                    value={proposalEdits[suggestionKey] || suggestion.suggestion}
+                                    value={proposalEdits[suggestionKey] || suggestion.proposedFix || suggestion.suggestion}
                                     onChange={(e) => setProposalEdits(prev => ({
                                       ...prev,
                                       [suggestionKey]: e.target.value
@@ -585,7 +598,10 @@ const SEOAudit = () => {
                                     className="min-h-[80px]"
                                   />
                                   <p className="text-xs text-muted-foreground">
-                                    This proposal will be used when applying SEO fixes
+                                    {suggestion.proposedFix ? 
+                                      "AI-generated proposed fix (you can edit this before applying)" : 
+                                      "This proposal will be used when applying SEO fixes"
+                                    }
                                   </p>
                                 </div>
                               )}
