@@ -138,7 +138,13 @@ const SEOFixPreview = ({ open, onOpenChange, analysis, postId, onFixesApplied }:
             </CardHeader>
             <CardContent>
               <div className="grid gap-3">
-                {analysis.suggestions.map((suggestion, index) => (
+                {analysis.suggestions
+                  .sort((a, b) => {
+                    const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
+                    return (priorityOrder[a.priority as keyof typeof priorityOrder] || 4) - 
+                           (priorityOrder[b.priority as keyof typeof priorityOrder] || 4);
+                  })
+                  .map((suggestion, index) => (
                   <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
                     <Badge variant={getPriorityColor(suggestion.priority)}>
                       {suggestion.priority}

@@ -579,8 +579,14 @@ const SEOAudit = () => {
                         </Button>
                       </div>
                       
-                      <div className="space-y-3">
-                        {currentAnalysis.suggestions.map((suggestion: SEOSuggestion, index: number) => {
+                       <div className="space-y-3">
+                         {currentAnalysis.suggestions
+                           .sort((a: SEOSuggestion, b: SEOSuggestion) => {
+                             const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
+                             return (priorityOrder[a.priority as keyof typeof priorityOrder] || 4) - 
+                                    (priorityOrder[b.priority as keyof typeof priorityOrder] || 4);
+                           })
+                           .map((suggestion: SEOSuggestion, index: number) => {
                           const suggestionKey = `${currentAnalysis.url}-${index}`;
                           const hasEditedProposal = proposalEdits[suggestionKey];
                           const showProposal = showProposals[suggestionKey] || false;
