@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { useAnalytics } from "./hooks/useAnalytics";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
@@ -15,9 +16,15 @@ import PostEditor from "./pages/PostEditor";
 import AdminUsers from "./pages/AdminUsers";
 import Polls from "./pages/Polls";
 import AdminPolls from "./pages/AdminPolls";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const AnalyticsWrapper = ({ children }: { children: React.ReactNode }) => {
+  useAnalytics(); // Initialize analytics tracking
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -26,7 +33,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
+          <AnalyticsWrapper>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
@@ -39,9 +47,11 @@ const App = () => (
             <Route path="/admin/edit/:id" element={<PostEditor />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/polls" element={<AdminPolls />} />
+            <Route path="/admin/analytics" element={<Analytics />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            </Routes>
+          </AnalyticsWrapper>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
