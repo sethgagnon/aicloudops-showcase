@@ -91,7 +91,7 @@ Return format:
 URL: ${url}
 Title: ${title || 'Not provided'}
 Meta Description: ${metaDescription || 'Not provided'}
-Content: ${content ? content.substring(0, 2000) : 'Not provided'}
+Content: ${content ? content.substring(0, 15000) : 'Not provided'}
 Target Keywords: ${targetKeywords.join(', ') || 'None specified'}
 
 For each suggestion, provide:

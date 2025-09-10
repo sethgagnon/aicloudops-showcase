@@ -114,7 +114,7 @@ const SEOAudit = () => {
         ...(posts || []).map(post => ({
           url: `${siteUrl}/blog/${post.slug}`,
           title: post.title,
-          content: post.excerpt || post.content?.substring(0, 300) || '',
+          content: post.content || post.excerpt || '',
           type: 'post' as const,
           id: post.id
         }))
@@ -442,6 +442,16 @@ const SEOAudit = () => {
                     onChange={(e) => setAuditForm(prev => ({ ...prev, content: e.target.value }))}
                     className="min-h-[120px]"
                   />
+                  {auditForm.content && (
+                    <div className="text-xs text-muted-foreground">
+                      Content length: {auditForm.content.length} characters
+                      {auditForm.content.length > 15000 && (
+                        <span className="text-amber-600 ml-2">
+                          ⚠️ Content will be truncated to 15,000 characters for analysis
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <Button 
