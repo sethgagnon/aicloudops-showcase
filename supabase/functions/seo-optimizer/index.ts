@@ -21,12 +21,14 @@ interface SEOAnalysisRequest {
     type: 'post' | 'page';
   }>;
   postId?: string;
+  isStaticPage?: boolean;
   suggestions?: Array<{
     type: string;
     priority: string;
     issue: string;
     suggestion: string;
     impact: string;
+    current_content?: string;
   }>;
 }
 
@@ -53,7 +55,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { url, title, metaDescription, content, action, targetKeywords = [], pages = [], postId, suggestions = [] } = await req.json() as SEOAnalysisRequest;
+    const { url, title, metaDescription, content, action, targetKeywords = [], pages = [], postId, suggestions = [], isStaticPage = false } = await req.json() as SEOAnalysisRequest;
 
     console.log(`SEO Optimizer: ${action} request${action === 'bulk-analyze' ? ` for ${pages.length} pages` : ` for ${url}`}`);
 
@@ -346,12 +348,10 @@ Provide optimized versions that address these specific issues while maintaining 
         case 'apply-fixes':
           console.log(`SEO Optimizer: apply-fixes request for ${url}`);
           
-          const { suggestions, postId, isStaticPage } = body;
-          
           if (!suggestions || !Array.isArray(suggestions)) {
             return new Response(
               JSON.stringify({ error: 'Suggestions array is required' }),
-              { status: 400, headers: corsHeaders }
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
 
@@ -403,7 +403,22 @@ Focus only on the areas mentioned in the suggestions. Keep the tone professional
           }
 
           const optimizationData = await optimizationResponse.json();
-          const optimizedContent = JSON.parse(optimizationData.choices[0].message.content);
+          let optimizedContent;
+          
+          try {
+            optimizedContent = JSON.parse(optimizationData.choices[0].message.content);
+          } catch (parseError) {
+            console.error('Failed to parse optimization response:', parseError);
+            console.log('Raw response:', optimizationData.choices[0].message.content);
+            
+            // Fallback: create a basic response structure
+            optimizedContent = {
+              title: title,
+              meta_description: metaDescription,
+              content: content,
+              message: 'Failed to parse AI response, using original content'
+            };
+          }
 
           // Handle static pages
           if (isStaticPage) {
@@ -448,9 +463,9 @@ Focus only on the areas mentioned in the suggestions. Keep the tone professional
                 post_id: postId,
                 suggestion_type: 'seo_optimization',
                 original_text: JSON.stringify({
-                  title: body.title,
-                  excerpt: body.meta_description,
-                  content: body.content
+                  title: title,
+                  excerpt: metaDescription,
+                  content: content
                 }),
                 suggested_text: JSON.stringify(optimizedContent),
                 status: 'applied',
@@ -488,7 +503,7 @@ Focus only on the areas mentioned in the suggestions. Keep the tone professional
               optimizedContent,
               message: postId ? 'Blog post updated successfully' : 'Optimized content generated'
             }),
-            { headers: corsHeaders }
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         
 

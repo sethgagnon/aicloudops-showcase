@@ -344,21 +344,21 @@ const SEOAudit = () => {
       const postId = isStaticPage ? undefined : 
         sitePages.find(page => page.url === currentAnalysis.url)?.id;
       
-      const { data, error } = await supabase.functions.invoke('seo-optimizer', {
-        body: {
-          action: 'apply-fixes',
-          url: currentAnalysis.url,
-          suggestions: [{
-            ...suggestion,
-            suggestion: fixToApply
-          }],
-          postId,
-          isStaticPage,
-          title: currentAnalysis.title,
-          meta_description: currentAnalysis.meta_description,
-          content: currentAnalysis.content
-        }
-      });
+          const { data, error } = await supabase.functions.invoke('seo-optimizer', {
+            body: {
+              action: 'apply-fixes',
+              url: currentAnalysis.url,
+              suggestions: [{
+                ...suggestion,
+                suggestion: fixToApply
+              }],
+              postId,
+              isStaticPage,
+              title: currentAnalysis.title,
+              metaDescription: currentAnalysis.meta_description,
+              content: currentAnalysis.content
+            }
+          });
 
       if (error) throw error;
 
