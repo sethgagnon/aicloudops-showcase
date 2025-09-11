@@ -64,6 +64,28 @@ const SEOAudit = () => {
     targetKeywords: ''
   });
 
+  // Utility function to extract text content from HTML
+  const extractTextFromHTML = (html: string): string => {
+    if (!html) return '';
+    
+    // Create a temporary div element to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // Remove script and style elements
+    const scripts = tempDiv.querySelectorAll('script, style');
+    scripts.forEach(script => script.remove());
+    
+    // Get text content and clean it up
+    let text = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Remove extra whitespace and normalize
+    text = text.replace(/\s+/g, ' ').trim();
+    
+    // Limit to reasonable length for analysis (first 2000 chars)
+    return text.substring(0, 2000);
+  };
+
   useEffect(() => {
     const checkUserRole = async () => {
       if (user) {
@@ -96,17 +118,17 @@ const SEOAudit = () => {
 
   const fetchSitePages = async () => {
     try {
-      // Fetch published blog posts
+      // Fetch published blog posts with full content
       const { data: posts } = await supabase
         .from('posts')
-        .select('id, title, slug, excerpt')
+        .select('id, title, slug, excerpt, content')
         .eq('status', 'published');
 
       const blogPages = posts?.map(post => ({
         url: `/blog/${post.slug}`,
         title: post.title,
         metaDescription: post.excerpt || '',
-        content: '', // We'd need to fetch full content if needed
+        content: extractTextFromHTML(post.content || ''),
         isStatic: false,
         type: 'post' as const,
         id: post.id
@@ -117,15 +139,29 @@ const SEOAudit = () => {
         .from('static_pages')
         .select('*');
 
-      const staticPages = staticPagesData?.map(page => ({
-        url: page.path,
-        title: page.title,
-        metaDescription: page.meta_description || '',
-        content: '',
-        isStatic: true,
-        type: 'page' as const,
-        keywords: page.keywords
-      })) || [];
+      const staticPages = await Promise.all(staticPagesData?.map(async (page) => {
+        let content = '';
+        try {
+          // For static pages, try to extract content from the actual page
+          const response = await fetch(window.location.origin + page.path);
+          if (response.ok) {
+            const html = await response.text();
+            content = extractTextFromHTML(html);
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch content for ${page.path}:`, error);
+        }
+
+        return {
+          url: page.path,
+          title: page.title,
+          metaDescription: page.meta_description || '',
+          content,
+          isStatic: true,
+          type: 'page' as const,
+          keywords: page.keywords
+        };
+      }) || []);
 
       setSitePages([...staticPages, ...blogPages]);
     } catch (error) {
@@ -141,6 +177,7 @@ const SEOAudit = () => {
         ...prev,
         url: selectedPage.url,
         title: selectedPage.title,
+        metaDescription: selectedPage.metaDescription || '',
         content: selectedPage.content
       }));
     }
