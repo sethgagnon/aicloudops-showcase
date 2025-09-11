@@ -78,7 +78,7 @@ const Footer = () => {
             </Link>
             
             <p className="text-secondary-foreground/80 mb-6 max-w-md">
-              Expert insights and practical strategies for leading AI adoption, 
+              Insights and practical strategies for leading AI adoption, 
               cloud transformation, and building high-performance engineering teams.
             </p>
             
