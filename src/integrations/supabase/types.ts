@@ -146,6 +146,48 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_security_audit: {
+        Row: {
+          action: string
+          created_at: string | null
+          failure_reason: string | null
+          id: string
+          ip_address: unknown | null
+          record_id: string | null
+          sensitive_fields_accessed: string[] | null
+          success: boolean | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          sensitive_fields_accessed?: string[] | null
+          success?: boolean | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          sensitive_fields_accessed?: string[] | null
+          success?: boolean | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -582,6 +624,27 @@ export type Database = {
         Args: { title: string }
         Returns: string
       }
+      get_contacts_masked: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          status: string
+        }[]
+      }
+      get_security_incidents: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          action: string
+          failure_reason: string
+          incident_count: number
+          incident_time: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -594,6 +657,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      validate_contact_access: {
+        Args: { _action: string; _user_id: string }
         Returns: boolean
       }
       validate_contact_submission: {
