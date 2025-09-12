@@ -297,6 +297,21 @@ const SEOAudit = () => {
     const matchingPage = sitePages.find(page => page.url === analysis.url);
     const postId = matchingPage?.type === 'post' ? matchingPage.id : undefined;
     
+    console.log('Opening fix preview for:', {
+      analysisUrl: analysis.url,
+      matchingPageFound: !!matchingPage,
+      matchingPageType: matchingPage?.type,
+      postId,
+      hasTitle: !!analysis.title,
+      hasSuggestions: !!analysis.suggestions?.length
+    });
+    
+    // Ensure we have required data
+    if (!analysis.url) {
+      toast.error('Analysis URL is missing');
+      return;
+    }
+    
     // Apply any edited proposals to the suggestions
     const updatedSuggestions = analysis.suggestions.map((suggestion, index) => {
       const suggestionKey = `${analysis.url}-${index}`;

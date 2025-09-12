@@ -77,6 +77,17 @@ const SEOFixPreview = ({ open, onOpenChange, analysis, postId, onFixesApplied }:
   const applyFixes = async () => {
     if (!optimizedContent) return;
 
+    // Validate required data before proceeding
+    if (!analysis.url) {
+      toast.error('URL is required but missing from analysis data');
+      return;
+    }
+
+    if (!analysis.suggestions || analysis.suggestions.length === 0) {
+      toast.error('No suggestions found to apply');
+      return;
+    }
+
     setIsApplying(true);
     try {
       // Determine if this is a static page or blog post
@@ -85,11 +96,19 @@ const SEOFixPreview = ({ open, onOpenChange, analysis, postId, onFixesApplied }:
       // Get the actual post ID from postId prop, don't extract from URL
       const actualPostId = isStaticPage ? undefined : postId;
       
+      // Validate post ID for blog posts
+      if (!isStaticPage && !actualPostId) {
+        toast.error('Blog post ID is required but missing. Please refresh and try again.');
+        return;
+      }
+      
       console.log('Applying fixes with:', {
         url: analysis.url,
         isStaticPage,
         postId: actualPostId,
-        suggestionsCount: analysis.suggestions.length
+        suggestionsCount: analysis.suggestions.length,
+        hasTitle: !!analysis.title,
+        hasMetaDescription: !!analysis.meta_description
       });
 
       const { data, error } = await supabase.functions.invoke('seo-optimizer', {
@@ -99,9 +118,9 @@ const SEOFixPreview = ({ open, onOpenChange, analysis, postId, onFixesApplied }:
           suggestions: analysis.suggestions,
           postId: actualPostId,
           isStaticPage,
-          title: analysis.title,
-          meta_description: analysis.meta_description,
-          content: analysis.content
+          title: analysis.title || '',
+          meta_description: analysis.meta_description || '',
+          content: analysis.content || ''
         }
       });
 
