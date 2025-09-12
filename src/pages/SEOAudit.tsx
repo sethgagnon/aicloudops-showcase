@@ -861,17 +861,18 @@ const SEOAudit = () => {
                         </Button>
                       </div>
                       
-                       <div className="space-y-3">
-                         {currentAnalysis.suggestions
-                           .sort((a: SEOSuggestion, b: SEOSuggestion) => {
-                             const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
-                             return (priorityOrder[a.priority as keyof typeof priorityOrder] || 4) - 
-                                    (priorityOrder[b.priority as keyof typeof priorityOrder] || 4);
-                           })
-                           .map((suggestion: SEOSuggestion, index: number) => {
-                          const suggestionKey = `${currentAnalysis.url}-${index}`;
-                          const hasEditedProposal = proposalEdits[suggestionKey];
-                          const showProposal = showProposals[suggestionKey] || false;
+                        <div className="space-y-3">
+                          {currentAnalysis.suggestions
+                            .sort((a: SEOSuggestion, b: SEOSuggestion) => {
+                              const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
+                              return (priorityOrder[a.priority as keyof typeof priorityOrder] || 4) - 
+                                     (priorityOrder[b.priority as keyof typeof priorityOrder] || 4);
+                            })
+                            .map((suggestion: SEOSuggestion, sortedIndex: number) => {
+                           const originalIndex = currentAnalysis.suggestions.findIndex(s => s === suggestion);
+                           const suggestionKey = `${currentAnalysis.url}-${originalIndex}`;
+                           const hasEditedProposal = proposalEdits[suggestionKey];
+                           const showProposal = showProposals[suggestionKey] || false;
                           
                           const toggleProposal = () => {
                             setShowProposals(prev => ({
@@ -880,44 +881,44 @@ const SEOAudit = () => {
                             }));
                           };
                           
-                          return (
-                            <div key={index} className="border rounded-lg p-4 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <Badge variant={getSeverityColor(suggestion.priority) as any}>
-                                  {suggestion.priority?.toUpperCase()} Priority
-                                </Badge>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline">{suggestion.type}</Badge>
-                                   <div className="flex gap-1">
-                                     <Button
-                                       size="sm"
-                                       variant="outline"
-                                       onClick={toggleProposal}
-                                       className="text-xs"
-                                     >
-                                       {showProposal ? 'Hide' : 'Edit'} Fix
-                                     </Button>
-                                     <Button
-                                       size="sm"
-                                       variant="outline"
-                                       onClick={() => regenerateIndividualFix(index)}
-                                       disabled={regeneratingFix[suggestionKey]}
-                                       className="text-xs flex items-center gap-1"
-                                     >
-                                       {regeneratingFix[suggestionKey] ? (
-                                         <>
-                                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
-                                           Generating...
-                                         </>
-                                       ) : (
-                                         <>
-                                           <Sparkles className="h-3 w-3" />
-                                           Regenerate
-                                         </>
-                                       )}
-                                     </Button>
-                                   </div>
-                                </div>
+                           return (
+                             <div key={originalIndex} className="border rounded-lg p-4 space-y-2">
+                               <div className="flex items-center justify-between">
+                                 <Badge variant={getSeverityColor(suggestion.priority) as any}>
+                                   {suggestion.priority?.toUpperCase()} Priority
+                                 </Badge>
+                                 <div className="flex items-center gap-2">
+                                   <Badge variant="outline">{suggestion.type}</Badge>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={toggleProposal}
+                                        className="text-xs"
+                                      >
+                                        {showProposal ? 'Hide' : 'Edit'} Fix
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => regenerateIndividualFix(originalIndex)}
+                                        disabled={regeneratingFix[suggestionKey]}
+                                        className="text-xs flex items-center gap-1"
+                                      >
+                                        {regeneratingFix[suggestionKey] ? (
+                                          <>
+                                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                                            Generating...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Sparkles className="h-3 w-3" />
+                                            Regenerate
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                 </div>
                               </div>
                               <div>
                                 <p className="font-medium text-sm text-red-600 mb-1">Issue:</p>
@@ -957,7 +958,7 @@ const SEOAudit = () => {
                                            <div 
                                              key={altIndex} 
                                              className="p-3 bg-white dark:bg-gray-800 border rounded-lg cursor-pointer hover:border-blue-300 transition-colors"
-                                             onClick={() => selectFixAlternative(index, altIndex)}
+                                             onClick={() => selectFixAlternative(originalIndex, altIndex)}
                                            >
                                              <div className="flex items-start justify-between mb-2">
                                                <Badge variant="outline" className="text-xs">
@@ -968,7 +969,7 @@ const SEOAudit = () => {
                                                  variant="ghost"
                                                  onClick={(e) => {
                                                    e.stopPropagation();
-                                                   selectFixAlternative(index, altIndex);
+                                                   selectFixAlternative(originalIndex, altIndex);
                                                  }}
                                                  className="h-6 px-2 text-xs"
                                                >
@@ -1016,7 +1017,7 @@ const SEOAudit = () => {
                                      <div className="flex gap-2 mt-3">
                                        <Button
                                          size="sm"
-                                         onClick={() => applyIndividualFix(index)}
+                                         onClick={() => applyIndividualFix(originalIndex)}
                                          disabled={applyingIndividualFix[suggestionKey] || appliedFixes[suggestionKey]}
                                          className="flex-1"
                                        >
