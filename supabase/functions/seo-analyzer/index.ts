@@ -33,11 +33,28 @@ serve(async (req) => {
     const { pageId, pageType, url, title, content, action = 'analyze' } = await req.json();
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: false },
-      global: { headers: { Authorization: req.headers.get('Authorization')! } }
-    });
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Extract user ID from Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('Missing or invalid Authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    let userId;
+    try {
+      // Decode JWT token to get user ID
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub;
+      if (!userId) {
+        throw new Error('No user ID found in token');
+      }
+    } catch (error) {
+      console.error('Error extracting user ID from token:', error);
+      throw new Error('Invalid authentication token');
+    }
 
     if (action === 'analyze') {
       console.log('Starting SEO analysis for:', url);
@@ -179,7 +196,7 @@ Example response format:
           url,
           title,
           content: content.substring(0, 10000), // Truncate for storage
-          analyzed_by: (await supabase.auth.getUser()).data.user?.id,
+          analyzed_by: userId,
           summary
         })
         .select()
