@@ -93,6 +93,7 @@ const Footer = () => {
                     className="w-10 h-10 bg-secondary-foreground/10 rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-300 group"
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`Visit Seth Gagnon on ${social.name}`}
                   >
                     <Icon className="h-5 w-5" />
                   </a>
