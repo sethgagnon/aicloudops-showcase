@@ -263,7 +263,16 @@ Focus on: title length (50-60 chars), content structure, readability, and missin
               const pageAiResponse = await pageResponse.json();
               let pageResult;
               try {
-                pageResult = JSON.parse(pageAiResponse.choices[0].message.content);
+                let responseContent = pageAiResponse.choices[0].message.content;
+                
+                // Handle markdown code blocks - strip ```json and ``` if present
+                if (responseContent.includes('```json')) {
+                  responseContent = responseContent.replace(/```json\n?/, '').replace(/\n?```$/, '');
+                } else if (responseContent.includes('```')) {
+                  responseContent = responseContent.replace(/```\n?/, '').replace(/\n?```$/, '');
+                }
+                
+                pageResult = JSON.parse(responseContent);
               } catch (parseError) {
                 console.error('Failed to parse AI response for', page.url, parseError);
                 pageResult = { seoScore: 0, error: 'Failed to parse analysis' };
@@ -406,7 +415,16 @@ Focus only on the areas mentioned in the suggestions. Keep the tone professional
           let optimizedContent;
           
           try {
-            optimizedContent = JSON.parse(optimizationData.choices[0].message.content);
+            let responseContent = optimizationData.choices[0].message.content;
+            
+            // Handle markdown code blocks - strip ```json and ``` if present
+            if (responseContent.includes('```json')) {
+              responseContent = responseContent.replace(/```json\n?/, '').replace(/\n?```$/, '');
+            } else if (responseContent.includes('```')) {
+              responseContent = responseContent.replace(/```\n?/, '').replace(/\n?```$/, '');
+            }
+            
+            optimizedContent = JSON.parse(responseContent);
           } catch (parseError) {
             console.error('Failed to parse optimization response:', parseError);
             console.log('Raw response:', optimizationData.choices[0].message.content);
@@ -540,7 +558,16 @@ Focus only on the areas mentioned in the suggestions. Keep the tone professional
 
     let result;
     try {
-      result = JSON.parse(aiResponse.choices[0].message.content);
+      let responseContent = aiResponse.choices[0].message.content;
+      
+      // Handle markdown code blocks - strip ```json and ``` if present
+      if (responseContent.includes('```json')) {
+        responseContent = responseContent.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (responseContent.includes('```')) {
+        responseContent = responseContent.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      result = JSON.parse(responseContent);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
       // Fallback: return the raw text with basic structure
