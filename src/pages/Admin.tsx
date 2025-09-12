@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3, TrendingUp, Search, Globe } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3, TrendingUp, Globe } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -183,13 +183,6 @@ const Admin = () => {
                   >
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Polls
-                  </button>
-                  <button
-                    onClick={() => navigate('/admin/seo-audit')}
-                    className="btn-outline inline-flex items-center"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    SEO Audit
                   </button>
                   <button
                     onClick={() => navigate('/admin/sitemap')}

@@ -19,7 +19,7 @@ import AdminUsers from "./pages/AdminUsers";
 import Polls from "./pages/Polls";
 import AdminPolls from "./pages/AdminPolls";
 import Analytics from "./pages/Analytics";
-import SEOAudit from "./pages/SEOAudit";
+
 import AdminSitemap from "./pages/AdminSitemap";
 import Sitemap from "./pages/Sitemap";
 import NotFound from "./pages/NotFound";
@@ -53,7 +53,7 @@ const App = () => (
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/polls" element={<AdminPolls />} />
             <Route path="/admin/analytics" element={<Analytics />} />
-            <Route path="/admin/seo-audit" element={<SEOAudit />} />
+            
             <Route path="/admin/sitemap" element={<AdminSitemap />} />
             <Route path="/sitemap.xml" element={<Sitemap />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
