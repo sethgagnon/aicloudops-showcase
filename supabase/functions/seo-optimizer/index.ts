@@ -362,10 +362,38 @@ ${suggestions.map(s => `- ${s.type.toUpperCase()}: ${s.issue} | Suggestion: ${s.
         break;
 
       case 'regenerate-individual-fix':
-        if (typeof req.body.suggestionIndex !== 'number' || !suggestions || !suggestions[req.body.suggestionIndex]) {
+        console.log('Regenerate fix request data:', {
+          suggestionIndex: req.body.suggestionIndex,
+          suggestionIndexType: typeof req.body.suggestionIndex,
+          hasSuggestions: !!suggestions,
+          suggestionsLength: suggestions?.length,
+          suggestionsArray: suggestions
+        });
+
+        if (typeof req.body.suggestionIndex !== 'number') {
           return new Response(JSON.stringify({
             success: false,
-            error: 'Invalid suggestion index provided'
+            error: `Suggestion index must be a number, got: ${typeof req.body.suggestionIndex}`
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        if (!suggestions || !Array.isArray(suggestions)) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `Suggestions array is missing or invalid. Got: ${suggestions}`
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        if (!suggestions[req.body.suggestionIndex]) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: `No suggestion found at index ${req.body.suggestionIndex}. Array length: ${suggestions.length}`
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -537,10 +537,30 @@ const SEOAudit = () => {
       return;
     }
 
+    if (!currentAnalysis.suggestions || !Array.isArray(currentAnalysis.suggestions)) {
+      toast.error('No suggestions available to regenerate');
+      console.error('Missing suggestions in currentAnalysis:', currentAnalysis);
+      return;
+    }
+
+    if (suggestionIndex < 0 || suggestionIndex >= currentAnalysis.suggestions.length) {
+      toast.error('Invalid suggestion index');
+      console.error('Invalid suggestionIndex:', suggestionIndex, 'suggestions length:', currentAnalysis.suggestions.length);
+      return;
+    }
+
     const suggestionKey = `${currentAnalysis.url}-${suggestionIndex}`;
     setRegeneratingFix(prev => ({ ...prev, [suggestionKey]: true }));
 
     try {
+      console.log('Regenerating fix with data:', {
+        action: 'regenerate-individual-fix',
+        url: currentAnalysis.url,
+        suggestionIndex,
+        suggestionsLength: currentAnalysis.suggestions.length,
+        targetSuggestion: currentAnalysis.suggestions[suggestionIndex]
+      });
+
       const { data, error } = await supabase.functions.invoke('seo-optimizer', {
         body: {
           action: 'regenerate-individual-fix',
