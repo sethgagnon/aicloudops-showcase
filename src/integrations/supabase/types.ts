@@ -819,6 +819,16 @@ export type Database = {
           status: string
         }[]
       }
+      get_masked_audit_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          action_type: string
+          date_period: string
+          failure_count: number
+          success_count: number
+          unique_ips: number
+        }[]
+      }
       get_security_incidents: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -841,6 +851,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_super_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      promote_to_super_admin: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
       validate_contact_access: {
