@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3, TrendingUp, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Calendar, Clock, Tag as TagIcon, Users, LogOut, BarChart3, TrendingUp, Search, Globe } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -190,6 +190,13 @@ const Admin = () => {
                   >
                     <Search className="h-4 w-4 mr-2" />
                     SEO Audit
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/sitemap')}
+                    className="btn-outline inline-flex items-center"
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    Sitemap
                   </button>
                 </>
               )}
