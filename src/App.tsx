@@ -21,7 +21,6 @@ import AdminPolls from "./pages/AdminPolls";
 import Analytics from "./pages/Analytics";
 
 import AdminSitemap from "./pages/AdminSitemap";
-import SEOOptimizer from "./pages/SEOOptimizer";
 import Sitemap from "./pages/Sitemap";
 import NotFound from "./pages/NotFound";
 
@@ -56,7 +55,6 @@ const App = () => (
             <Route path="/admin/analytics" element={<Analytics />} />
             
             <Route path="/admin/sitemap" element={<AdminSitemap />} />
-            <Route path="/admin/seo" element={<SEOOptimizer />} />
             <Route path="/sitemap.xml" element={<Sitemap />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

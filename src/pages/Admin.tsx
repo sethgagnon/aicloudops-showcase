@@ -191,13 +191,6 @@ const Admin = () => {
                     <Globe className="h-4 w-4 mr-2" />
                     Sitemap
                   </button>
-                  <button
-                    onClick={() => navigate('/admin/seo')}
-                    className="btn-outline inline-flex items-center"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    SEO Optimizer
-                  </button>
                 </>
               )}
                <button
