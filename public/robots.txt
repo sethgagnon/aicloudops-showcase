@@ -14,4 +14,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://aicloudops.tech/sitemap.xml
+Sitemap: https://trfjldpqwzcuvfxxbkqs.supabase.co/functions/v1/generate-sitemap
