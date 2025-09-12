@@ -380,12 +380,20 @@ const SEOAudit = () => {
   };
 
   const applyIndividualFix = async (suggestionIndex: number) => {
+    console.log('applyIndividualFix called - currentAnalysis:', {
+      exists: !!currentAnalysis,
+      id: currentAnalysis?.id,
+      url: currentAnalysis?.url,
+      title: currentAnalysis?.title
+    });
+    
     if (!currentAnalysis) {
       toast.error('No analysis selected. Please select an analysis from the history or run a new analysis.');
       return;
     }
     
     if (!currentAnalysis.url) {
+      console.error('Analysis missing URL - full object:', currentAnalysis);
       toast.error('Analysis is missing URL data. Please select a valid analysis.');
       return;
     }
