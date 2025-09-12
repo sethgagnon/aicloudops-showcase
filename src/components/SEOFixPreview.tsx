@@ -81,14 +81,23 @@ const SEOFixPreview = ({ open, onOpenChange, analysis, postId, onFixesApplied }:
     try {
       // Determine if this is a static page or blog post
       const isStaticPage = !analysis.url.includes('/blog/');
-      const postId = isStaticPage ? undefined : analysis.url.split('/blog/')[1];
+      
+      // Get the actual post ID from postId prop, don't extract from URL
+      const actualPostId = isStaticPage ? undefined : postId;
+      
+      console.log('Applying fixes with:', {
+        url: analysis.url,
+        isStaticPage,
+        postId: actualPostId,
+        suggestionsCount: analysis.suggestions.length
+      });
 
       const { data, error } = await supabase.functions.invoke('seo-optimizer', {
         body: {
           action: 'apply-fixes',
           url: analysis.url,
           suggestions: analysis.suggestions,
-          postId,
+          postId: actualPostId,
           isStaticPage,
           title: analysis.title,
           meta_description: analysis.meta_description,
@@ -96,18 +105,23 @@ const SEOFixPreview = ({ open, onOpenChange, analysis, postId, onFixesApplied }:
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
-      if (data.success) {
-        toast.success(data.data.message);
+      if (data?.success) {
+        toast.success(data.message || 'SEO fixes applied successfully!');
         onFixesApplied?.();
         onOpenChange(false);
       } else {
-        throw new Error(data.error || 'Failed to apply fixes');
+        console.error('Function returned error:', data);
+        throw new Error(data?.error || 'Unknown error from SEO optimizer');
       }
     } catch (error) {
       console.error('Error applying fixes:', error);
-      toast.error('Failed to apply fixes: ' + error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to apply SEO fix: ${errorMessage}`);
     } finally {
       setIsApplying(false);
     }

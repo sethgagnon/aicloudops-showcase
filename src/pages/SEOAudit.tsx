@@ -350,16 +350,21 @@ const SEOAudit = () => {
       // Determine if this is a static page or blog post with proper null checks
       const analysisUrl = currentAnalysis.url || '';
       const isStaticPage = !analysisUrl.includes('/blog/');
-      const postId = isStaticPage ? undefined : 
-        sitePages.find(page => page.url === analysisUrl)?.id;
+      const matchingPage = sitePages.find(page => page.url === analysisUrl);
+      const postId = isStaticPage ? undefined : matchingPage?.id;
       
-      console.log('Applying fix for:', {
+      console.log('Applying individual fix for:', {
         url: analysisUrl,
         isStaticPage,
         postId,
+        matchingPageFound: !!matchingPage,
         suggestionType: suggestion.type,
         fixToApply: fixToApply?.substring(0, 100) + '...' // Log first 100 chars
       });
+      
+      if (!isStaticPage && !postId) {
+        throw new Error('Could not find matching blog post ID for URL: ' + analysisUrl);
+      }
       
       const { data, error } = await supabase.functions.invoke('seo-optimizer', {
         body: {
@@ -388,7 +393,7 @@ const SEOAudit = () => {
       }
 
       setAppliedFixes(prev => ({ ...prev, [suggestionKey]: true }));
-      toast.success(`SEO fix applied successfully to ${isStaticPage ? 'static page' : 'blog post'}!`);
+      toast.success(data.message || `SEO fix applied successfully to ${isStaticPage ? 'static page' : 'blog post'}!`);
       
       // Refresh analysis if needed
       if (postId || isStaticPage) {
@@ -397,7 +402,8 @@ const SEOAudit = () => {
       
     } catch (error) {
       console.error('Error applying individual fix:', error);
-      toast.error(`Failed to apply SEO fix: ${error.message || 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to apply SEO fix: ${errorMessage}`);
     } finally {
       setApplyingIndividualFix(prev => ({ ...prev, [suggestionKey]: false }));
     }
