@@ -55,7 +55,6 @@ const App = () => (
             <Route path="/admin/analytics" element={<Analytics />} />
             
             <Route path="/admin/sitemap" element={<AdminSitemap />} />
-            <Route path="/sitemap.xml" element={<Sitemap />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
