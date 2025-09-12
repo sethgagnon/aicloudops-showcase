@@ -191,13 +191,6 @@ const Admin = () => {
                     <Globe className="h-4 w-4 mr-2" />
                     Sitemap
                   </button>
-                  <button
-                    onClick={() => navigate('/admin/security')}
-                    className="btn-outline inline-flex items-center"
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Security
-                  </button>
                 </>
               )}
                <button

@@ -21,7 +21,7 @@ import AdminPolls from "./pages/AdminPolls";
 import Analytics from "./pages/Analytics";
 
 import AdminSitemap from "./pages/AdminSitemap";
-import SecurityMonitor from "./pages/SecurityMonitor";
+
 import Sitemap from "./pages/Sitemap";
 import NotFound from "./pages/NotFound";
 
@@ -56,7 +56,7 @@ const App = () => (
             <Route path="/admin/analytics" element={<Analytics />} />
             
             <Route path="/admin/sitemap" element={<AdminSitemap />} />
-            <Route path="/admin/security" element={<SecurityMonitor />} />
+            
             <Route path="/sitemap.xml" element={<Sitemap />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
