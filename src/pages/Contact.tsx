@@ -5,6 +5,11 @@ import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import SEO from '@/components/SEO';
+
+interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+}
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -19,62 +24,105 @@ const Contact = () => {
   const topics = ['General Inquiry', 'Consulting Opportunity', 'Other'];
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Input validation and sanitization
-    const sanitizedData = {
-      name: formData.name.trim().slice(0, 100),
-      email: formData.email.trim().toLowerCase().slice(0, 255),
-      topic: formData.topic.trim().slice(0, 100),
-      message: formData.message.trim().slice(0, 2000)
-    };
-
-    // Additional validation
-    if (!sanitizedData.name || !sanitizedData.email || !sanitizedData.message) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Prevent potential email injection
-    if (sanitizedData.name.includes('\n') || sanitizedData.name.includes('\r') || sanitizedData.email.includes('\n') || sanitizedData.email.includes('\r') || sanitizedData.topic.includes('\n') || sanitizedData.topic.includes('\r')) {
-      toast({
-        title: "Invalid Input",
-        description: "Invalid characters detected in form data.",
-        variant: "destructive"
-      });
-      setIsSubmitting(false);
-      return;
-    }
     setIsSubmitting(true);
-    try {
-      const {
-        error: insertError
-      } = await supabase.from('contacts').insert([sanitizedData]);
-      if (insertError) throw insertError;
 
-      // Send notifications (owner + confirmation)
-      await supabase.functions.invoke('contact-notify', {
-        body: sanitizedData
-      });
+    try {
+      // Enhanced security validation using database function
+      const { data: validationData, error: validationError } = await supabase.rpc(
+        'validate_contact_submission', 
+        { 
+          _name: formData.name,
+          _email: formData.email, 
+          _message: formData.message 
+        }
+      );
+
+      if (validationError) {
+        console.error('Validation error:', validationError);
+        toast({
+          title: "Validation Error",
+          description: "There was an error validating your submission. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const validationResult = validationData as unknown as ValidationResult;
+      if (!validationResult.valid) {
+        const errorMessages = validationResult.errors.join(', ');
+        toast({
+          title: "Validation Error",
+          description: errorMessages,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Input sanitization for database insertion
+      const sanitizedData = {
+        name: formData.name.trim().slice(0, 100),
+        email: formData.email.trim().toLowerCase().slice(0, 255),
+        topic: formData.topic.trim().slice(0, 100),
+        message: formData.message.trim().slice(0, 2000)
+      };
+
+      // Insert into database with enhanced security policies
+      const { error: insertError } = await supabase
+        .from('contacts')
+        .insert([sanitizedData]);
+
+      if (insertError) {
+        // Check if it's a rate limiting error
+        if (insertError.message.includes('rate limit') || insertError.message.includes('Rate limit')) {
+          toast({
+            title: "Rate Limit Exceeded",
+            description: "Please wait before submitting another message. You can submit up to 5 messages per hour.",
+            variant: "destructive"
+          });
+          return;
+        }
+        throw insertError;
+      }
+
+      // Send notifications (owner + confirmation) with enhanced error handling
+      try {
+        await supabase.functions.invoke('contact-notify', {
+          body: sanitizedData
+        });
+      } catch (notificationError) {
+        console.error('Notification error:', notificationError);
+        // Don't fail the entire process if notifications fail
+        // The contact was successfully saved
+      }
+
       toast({
         title: "Message sent successfully!",
         description: "Thank you for reaching out. I'll get back to you within 24 hours."
       });
+      
+      // Clear form on success
       setFormData({
         name: '',
         email: '',
         topic: '',
         message: ''
       });
+
     } catch (error: any) {
       console.error('Contact submit error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Please try again or contact me directly via email.";
+      
+      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        errorMessage = "It looks like you've already submitted this message recently.";
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+
       toast({
         title: "Error sending message",
-        description: "Please try again or contact me directly via email.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

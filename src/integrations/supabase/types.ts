@@ -110,6 +110,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_access_logs: {
+        Row: {
+          accessed_at: string
+          action: string
+          contact_id: string | null
+          failure_reason: string | null
+          id: string
+          ip_address: unknown | null
+          success: boolean
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          action: string
+          contact_id?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string
+          action?: string
+          contact_id?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -552,6 +588,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      has_role_secure: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      validate_contact_submission: {
+        Args: { _email: string; _ip?: unknown; _message: string; _name: string }
+        Returns: Json
       }
     }
     Enums: {
