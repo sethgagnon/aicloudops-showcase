@@ -20,6 +20,7 @@ import Polls from "./pages/Polls";
 import AdminPolls from "./pages/AdminPolls";
 import Analytics from "./pages/Analytics";
 import SEOAudit from "./pages/SEOAudit";
+import Sitemap from "./pages/Sitemap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/admin/polls" element={<AdminPolls />} />
             <Route path="/admin/analytics" element={<Analytics />} />
             <Route path="/admin/seo-audit" element={<SEOAudit />} />
+            <Route path="/sitemap.xml" element={<Sitemap />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
