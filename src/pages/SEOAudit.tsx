@@ -226,27 +226,45 @@ const SEOAudit = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
-      const transformedData = (data || []).map(item => ({
-        id: item.id,
-        url: item.url,
-        title: item.title || '',
-        meta_description: item.meta_description || '',
-        content: item.content || '',
-        seo_score: item.seo_score || 0,
-        title_score: item.title_score || 0,
-        meta_description_score: item.meta_description_score || 0,
-        content_score: item.content_score || 0,
-        keyword_density: (item.keyword_density && typeof item.keyword_density === 'object' && item.keyword_density !== null) 
-          ? item.keyword_density as Record<string, number>
-          : {},
-        suggestions: Array.isArray(item.suggestions) 
-          ? (item.suggestions as unknown) as SEOSuggestion[]
-          : typeof item.suggestions === 'string' 
-            ? JSON.parse(item.suggestions) 
-            : [],
-        created_at: item.created_at
-      }));
+      // Transform the data to match our interface with proper type validation
+      const transformedData = (data || []).map(item => {
+        // Ensure all fields are properly typed and validated
+        const transformedItem: SEOAnalysis = {
+          id: String(item.id || ''),
+          url: String(item.url || ''),
+          title: String(item.title || ''),
+          meta_description: String(item.meta_description || ''),
+          content: String(item.content || ''),
+          seo_score: Number(item.seo_score || 0),
+          title_score: Number(item.title_score || 0),
+          meta_description_score: Number(item.meta_description_score || 0),
+          content_score: Number(item.content_score || 0),
+          keyword_density: (item.keyword_density && typeof item.keyword_density === 'object' && item.keyword_density !== null) 
+            ? item.keyword_density as Record<string, number>
+            : {},
+          suggestions: (() => {
+            if (Array.isArray(item.suggestions)) {
+              return item.suggestions as unknown as SEOSuggestion[];
+            } else if (typeof item.suggestions === 'string') {
+              try {
+                const parsed = JSON.parse(item.suggestions);
+                return Array.isArray(parsed) ? parsed as unknown as SEOSuggestion[] : [];
+              } catch {
+                return [];
+              }
+            }
+            return [];
+          })(),
+          created_at: String(item.created_at || new Date().toISOString())
+        };
+        
+        // Validate the transformed item
+        if (!transformedItem.url || typeof transformedItem.url !== 'string') {
+          console.warn('Invalid URL in analysis item:', { id: transformedItem.id, url: transformedItem.url });
+        }
+        
+        return transformedItem;
+      });
       
       setAnalyses(transformedData);
     } catch (error) {
@@ -366,8 +384,46 @@ const SEOAudit = () => {
       suggestionsCount: analysis.suggestions?.length || 0
     });
     
-    setCurrentAnalysis(analysis);
-    toast.success(`Selected analysis for "${analysis.title}" - you can now apply individual fixes`);
+    // Validate and ensure data integrity before setting state
+    if (!analysis || typeof analysis !== 'object') {
+      console.error('Invalid analysis object:', analysis);
+      toast.error('Invalid analysis data. Please try selecting again.');
+      return;
+    }
+    
+    if (!analysis.url || typeof analysis.url !== 'string') {
+      console.error('Invalid URL in analysis:', { url: analysis.url, type: typeof analysis.url });
+      toast.error('Analysis is missing valid URL data. Please run a new analysis.');
+      return;
+    }
+    
+    // Create a clean copy to prevent any reference issues
+    const cleanAnalysis: SEOAnalysis = {
+      id: String(analysis.id || ''),
+      url: String(analysis.url || ''),
+      title: String(analysis.title || ''),
+      meta_description: String(analysis.meta_description || ''),
+      content: String(analysis.content || ''),
+      seo_score: Number(analysis.seo_score || 0),
+      title_score: Number(analysis.title_score || 0),
+      meta_description_score: Number(analysis.meta_description_score || 0),
+      content_score: Number(analysis.content_score || 0),
+      keyword_density: (analysis.keyword_density && typeof analysis.keyword_density === 'object') 
+        ? analysis.keyword_density 
+        : {},
+      suggestions: Array.isArray(analysis.suggestions) ? analysis.suggestions : [],
+      created_at: String(analysis.created_at || new Date().toISOString())
+    };
+    
+    console.log('Setting clean analysis:', {
+      id: cleanAnalysis.id,
+      url: cleanAnalysis.url,
+      urlType: typeof cleanAnalysis.url,
+      title: cleanAnalysis.title
+    });
+    
+    setCurrentAnalysis(cleanAnalysis);
+    toast.success(`Selected analysis for "${cleanAnalysis.title}" - you can now apply individual fixes`);
   };
 
   const handleFixesApplied = () => {
@@ -384,6 +440,7 @@ const SEOAudit = () => {
       exists: !!currentAnalysis,
       id: currentAnalysis?.id,
       url: currentAnalysis?.url,
+      urlType: typeof currentAnalysis?.url,
       title: currentAnalysis?.title
     });
     
@@ -392,9 +449,46 @@ const SEOAudit = () => {
       return;
     }
     
-    if (!currentAnalysis.url) {
-      console.error('Analysis missing URL - full object:', currentAnalysis);
-      toast.error('Analysis is missing URL data. Please select a valid analysis.');
+    // Enhanced validation for URL corruption
+    if (!currentAnalysis.url || typeof currentAnalysis.url !== 'string' || currentAnalysis.url.trim() === '') {
+      console.error('Analysis missing or corrupted URL - full object:', {
+        url: currentAnalysis.url,
+        urlType: typeof currentAnalysis.url,
+        fullAnalysis: currentAnalysis
+      });
+      
+      // Try to recover by refetching the analysis
+      if (currentAnalysis.id) {
+        console.log('Attempting to recover analysis from database...');
+        try {
+          const { data: recoveredAnalysis, error } = await supabase
+            .from('seo_analysis')
+            .select('*')
+            .eq('id', currentAnalysis.id)
+            .single();
+            
+          if (!error && recoveredAnalysis?.url) {
+            console.log('Recovered analysis URL:', recoveredAnalysis.url);
+            // Re-select the recovered analysis with proper type conversion
+            const suggestions = Array.isArray(recoveredAnalysis.suggestions) 
+              ? recoveredAnalysis.suggestions 
+              : typeof recoveredAnalysis.suggestions === 'string'
+                ? JSON.parse(recoveredAnalysis.suggestions || '[]')
+                : [];
+                
+            selectAnalysisForWork({
+              ...recoveredAnalysis,
+              suggestions
+            } as SEOAnalysis);
+            toast.success('Analysis data recovered. Please try applying the fix again.');
+            return;
+          }
+        } catch (recoveryError) {
+          console.error('Failed to recover analysis:', recoveryError);
+        }
+      }
+      
+      toast.error('Analysis data is corrupted. Please select a valid analysis from the history.');
       return;
     }
     
