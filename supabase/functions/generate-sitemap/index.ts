@@ -100,25 +100,28 @@ serve(async (req) => {
     const baseUrl = 'https://aicloudops.tech';
     const now = new Date().toISOString();
 
-    // Generate sitemap XML
+    // Generate enhanced SEO sitemap XML
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">`;
 
-    // Add homepage
+    // Add homepage with enhanced metadata
     sitemap += `
   <url>
     <loc>${baseUrl}/</loc>
     <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>`;
 
-    // Add static pages
+    // Add static pages with SEO-optimized priorities
     const defaultStaticPages = [
-      { path: '/about', priority: '0.8', changefreq: 'monthly' },
-      { path: '/blog', priority: '0.9', changefreq: 'weekly' },
-      { path: '/contact', priority: '0.7', changefreq: 'monthly' },
-      { path: '/polls', priority: '0.6', changefreq: 'weekly' }
+      { path: '/about', priority: '0.9', changefreq: 'monthly' },
+      { path: '/blog', priority: '0.95', changefreq: 'daily' },
+      { path: '/contact', priority: '0.8', changefreq: 'monthly' },
+      { path: '/polls', priority: '0.7', changefreq: 'weekly' },
+      { path: '/auth', priority: '0.5', changefreq: 'yearly' }
     ];
 
     defaultStaticPages.forEach(page => {
@@ -132,15 +135,37 @@ serve(async (req) => {
   </url>`;
     });
 
-    // Add blog posts
+    // Add blog posts with enhanced SEO metadata
     if (posts && posts.length > 0) {
-      posts.forEach((post: BlogPost) => {
+      const recentPosts = posts.slice(0, 10); // Latest 10 posts for news sitemap
+      
+      posts.forEach((post: BlogPost, index: number) => {
+        const isRecent = new Date(post.updated_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
+        const priority = index < 5 ? '0.9' : isRecent ? '0.8' : '0.7'; // Higher priority for latest posts
+        const changefreq = isRecent ? 'weekly' : 'monthly';
+        
         sitemap += `
   <url>
     <loc>${baseUrl}/blog/${post.slug}</loc>
     <lastmod>${post.updated_at}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>`;
+        
+        // Add news sitemap data for recent posts
+        if (recentPosts.includes(post)) {
+          const pubDate = new Date(post.created_at).toISOString().split('T')[0]; // YYYY-MM-DD format
+          sitemap += `
+    <news:news>
+      <news:publication>
+        <news:name>AI Cloud Ops</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>${pubDate}</news:publication_date>
+      <news:title><![CDATA[${post.slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}]]></news:title>
+    </news:news>`;
+        }
+        
+        sitemap += `
   </url>`;
       });
     }
