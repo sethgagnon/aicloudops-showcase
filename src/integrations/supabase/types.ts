@@ -444,6 +444,36 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_access_audit: {
+        Row: {
+          accessed_profile_id: string | null
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accessed_profile_id?: string | null
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accessed_profile_id?: string | null
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
