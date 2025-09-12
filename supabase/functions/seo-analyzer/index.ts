@@ -30,7 +30,9 @@ serve(async (req) => {
   }
 
   try {
-    const { pageId, pageType, url, title, content, action = 'analyze' } = await req.json();
+    // Parse request body once and extract all possible fields
+    const requestData = await req.json();
+    const { pageId, pageType, url, title, content, action = 'analyze', issueContext, category } = requestData;
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -243,8 +245,11 @@ Example response format:
       });
 
     } else if (action === 'regenerate') {
-      const { issueContext, category } = await req.json();
       console.log('Regenerating fix for category:', category);
+      
+      if (!issueContext || !category) {
+        throw new Error('Missing issueContext or category for regeneration');
+      }
       
       const regeneratePrompt = `Generate specific replacement text for this SEO issue:
 Issue Context: ${issueContext}
