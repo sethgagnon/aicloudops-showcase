@@ -58,6 +58,8 @@ const SEOAudit = () => {
   const [isApplyingFix, setIsApplyingFix] = useState(false);
   const [applyingIndividualFix, setApplyingIndividualFix] = useState<Record<string, boolean>>({});
   const [appliedFixes, setAppliedFixes] = useState<Record<string, boolean>>({});
+  const [regeneratingFix, setRegeneratingFix] = useState<Record<string, boolean>>({});
+  const [fixAlternatives, setFixAlternatives] = useState<Record<string, Array<{proposedFix: string, approach: string, pros: string}>>>({});
   const [auditForm, setAuditForm] = useState({
     url: '',
     title: '',
@@ -529,6 +531,63 @@ const SEOAudit = () => {
     }
   };
 
+  const regenerateIndividualFix = async (suggestionIndex: number) => {
+    if (!currentAnalysis) {
+      toast.error('No analysis selected');
+      return;
+    }
+
+    const suggestionKey = `${currentAnalysis.url}-${suggestionIndex}`;
+    setRegeneratingFix(prev => ({ ...prev, [suggestionKey]: true }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seo-optimizer', {
+        body: {
+          action: 'regenerate-individual-fix',
+          url: currentAnalysis.url,
+          title: currentAnalysis.title,
+          metaDescription: currentAnalysis.meta_description,
+          content: currentAnalysis.content,
+          suggestions: currentAnalysis.suggestions,
+          suggestionIndex,
+          targetKeywords: [] // Could be extracted from analysis if needed
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setFixAlternatives(prev => ({
+          ...prev,
+          [suggestionKey]: data.data.alternatives
+        }));
+        toast.success('Generated 3 alternative fix options!');
+      } else {
+        throw new Error(data.error || 'Failed to regenerate fix');
+      }
+    } catch (error) {
+      console.error('Error regenerating fix:', error);
+      toast.error('Failed to regenerate fix: ' + error.message);
+    } finally {
+      setRegeneratingFix(prev => ({ ...prev, [suggestionKey]: false }));
+    }
+  };
+
+  const selectFixAlternative = (suggestionIndex: number, alternativeIndex: number) => {
+    if (!currentAnalysis) return;
+    
+    const suggestionKey = `${currentAnalysis.url}-${suggestionIndex}`;
+    const alternatives = fixAlternatives[suggestionKey];
+    
+    if (alternatives && alternatives[alternativeIndex]) {
+      setProposalEdits(prev => ({
+        ...prev,
+        [suggestionKey]: alternatives[alternativeIndex].proposedFix
+      }));
+      toast.success('Alternative fix selected and ready to apply!');
+    }
+  };
+
   if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -809,14 +868,35 @@ const SEOAudit = () => {
                                 </Badge>
                                 <div className="flex items-center gap-2">
                                   <Badge variant="outline">{suggestion.type}</Badge>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={toggleProposal}
-                                    className="text-xs"
-                                  >
-                                    {showProposal ? 'Hide' : 'Edit'} Proposal
-                                  </Button>
+                                   <div className="flex gap-1">
+                                     <Button
+                                       size="sm"
+                                       variant="outline"
+                                       onClick={toggleProposal}
+                                       className="text-xs"
+                                     >
+                                       {showProposal ? 'Hide' : 'Edit'} Fix
+                                     </Button>
+                                     <Button
+                                       size="sm"
+                                       variant="outline"
+                                       onClick={() => regenerateIndividualFix(index)}
+                                       disabled={regeneratingFix[suggestionKey]}
+                                       className="text-xs flex items-center gap-1"
+                                     >
+                                       {regeneratingFix[suggestionKey] ? (
+                                         <>
+                                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                                           Generating...
+                                         </>
+                                       ) : (
+                                         <>
+                                           <Sparkles className="h-3 w-3" />
+                                           Regenerate
+                                         </>
+                                       )}
+                                     </Button>
+                                   </div>
                                 </div>
                               </div>
                               <div>
@@ -843,57 +923,103 @@ const SEOAudit = () => {
                                 </div>
                               )}
                               
-                              {showProposal && (
-                                <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <p className="font-medium text-sm">Proposed Fix:</p>
-                                    {hasEditedProposal && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        Modified
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <Textarea
-                                    placeholder="Enter your custom fix proposal here..."
-                                    value={proposalEdits[suggestionKey] || suggestion.proposedFix || suggestion.suggestion}
-                                    onChange={(e) => setProposalEdits(prev => ({
-                                      ...prev,
-                                      [suggestionKey]: e.target.value
-                                    }))}
-                                    className="min-h-[80px]"
-                                  />
-                                  <p className="text-xs text-muted-foreground">
-                                    {suggestion.proposedFix ? 
-                                      "AI-generated proposed fix (you can edit this before applying)" : 
-                                      "This proposal will be used when applying SEO fixes"
-                                    }
-                                  </p>
-                                  <div className="flex gap-2 mt-3">
-                                    <Button
-                                      size="sm"
-                                      onClick={() => applyIndividualFix(index)}
-                                      disabled={applyingIndividualFix[suggestionKey] || appliedFixes[suggestionKey]}
-                                      className="flex-1"
-                                    >
-                                      {applyingIndividualFix[suggestionKey] ? (
-                                        <>
-                                          <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-1"></div>
-                                          Applying...
-                                        </>
-                                      ) : appliedFixes[suggestionKey] ? (
-                                        '✓ Applied'
-                                      ) : (
-                                        'Apply This Fix'
-                                      )}
-                                    </Button>
-                                    {appliedFixes[suggestionKey] && (
-                                      <Badge variant="default" className="bg-green-600">
-                                        Applied
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
+                               {showProposal && (
+                                 <div className="mt-4 space-y-4">
+                                   {/* Fix Alternatives */}
+                                   {fixAlternatives[suggestionKey] && (
+                                     <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                                       <h4 className="font-medium text-sm text-blue-700 dark:text-blue-300 mb-3 flex items-center gap-2">
+                                         <Sparkles className="h-4 w-4" />
+                                         AI Generated Alternatives
+                                       </h4>
+                                       <div className="space-y-3">
+                                         {fixAlternatives[suggestionKey].map((alternative, altIndex) => (
+                                           <div 
+                                             key={altIndex} 
+                                             className="p-3 bg-white dark:bg-gray-800 border rounded-lg cursor-pointer hover:border-blue-300 transition-colors"
+                                             onClick={() => selectFixAlternative(index, altIndex)}
+                                           >
+                                             <div className="flex items-start justify-between mb-2">
+                                               <Badge variant="outline" className="text-xs">
+                                                 Option {altIndex + 1}
+                                               </Badge>
+                                               <Button
+                                                 size="sm"
+                                                 variant="ghost"
+                                                 onClick={(e) => {
+                                                   e.stopPropagation();
+                                                   selectFixAlternative(index, altIndex);
+                                                 }}
+                                                 className="h-6 px-2 text-xs"
+                                               >
+                                                 Select
+                                               </Button>
+                                             </div>
+                                             <p className="text-sm font-mono text-gray-700 dark:text-gray-300 mb-2">
+                                               {alternative.proposedFix}
+                                             </p>
+                                             <div className="text-xs text-muted-foreground">
+                                               <p><strong>Approach:</strong> {alternative.approach}</p>
+                                               <p><strong>Pros:</strong> {alternative.pros}</p>
+                                             </div>
+                                           </div>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   )}
+
+                                   {/* Editable Proposed Fix */}
+                                   <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                                     <div className="flex items-center justify-between">
+                                       <p className="font-medium text-sm">Proposed Fix:</p>
+                                       {hasEditedProposal && (
+                                         <Badge variant="secondary" className="text-xs">
+                                           Modified
+                                         </Badge>
+                                       )}
+                                     </div>
+                                     <Textarea
+                                       placeholder="Enter your custom fix proposal here..."
+                                       value={proposalEdits[suggestionKey] || suggestion.proposedFix || suggestion.suggestion}
+                                       onChange={(e) => setProposalEdits(prev => ({
+                                         ...prev,
+                                         [suggestionKey]: e.target.value
+                                       }))}
+                                       className="min-h-[80px]"
+                                     />
+                                     <p className="text-xs text-muted-foreground">
+                                       {suggestion.proposedFix ? 
+                                         "AI-generated proposed fix (you can edit this before applying)" : 
+                                         "This proposal will be used when applying SEO fixes"
+                                       }
+                                     </p>
+                                     <div className="flex gap-2 mt-3">
+                                       <Button
+                                         size="sm"
+                                         onClick={() => applyIndividualFix(index)}
+                                         disabled={applyingIndividualFix[suggestionKey] || appliedFixes[suggestionKey]}
+                                         className="flex-1"
+                                       >
+                                         {applyingIndividualFix[suggestionKey] ? (
+                                           <>
+                                             <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-1"></div>
+                                             Applying...
+                                           </>
+                                         ) : appliedFixes[suggestionKey] ? (
+                                           '✓ Applied'
+                                         ) : (
+                                           'Apply This Fix'
+                                         )}
+                                       </Button>
+                                       {appliedFixes[suggestionKey] && (
+                                         <Badge variant="default" className="bg-green-600">
+                                           Applied
+                                         </Badge>
+                                       )}
+                                     </div>
+                                   </div>
+                                 </div>
+                               )}
                             </div>
                           );
                         })}

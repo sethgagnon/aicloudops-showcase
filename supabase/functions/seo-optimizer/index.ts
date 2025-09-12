@@ -12,7 +12,7 @@ interface SEOAnalysisRequest {
   title?: string;
   metaDescription?: string;
   content?: string;
-  action: 'analyze' | 'suggest' | 'optimize' | 'audit' | 'bulk-analyze' | 'apply-fixes' | 'get-optimized-content';
+  action: 'analyze' | 'suggest' | 'optimize' | 'audit' | 'bulk-analyze' | 'apply-fixes' | 'get-optimized-content' | 'regenerate-individual-fix';
   targetKeywords?: string[];
   pages?: Array<{
     url: string;
@@ -29,7 +29,9 @@ interface SEOAnalysisRequest {
     suggestion: string;
     impact: string;
     current_content?: string;
+    proposedFix?: string;
   }>;
+  suggestionIndex?: number;
 }
 
 interface SEOScore {
@@ -55,7 +57,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { url, title, metaDescription, content, action, targetKeywords = [], pages = [], postId, suggestions = [], isStaticPage = false } = await req.json() as SEOAnalysisRequest;
+    const { url, title, metaDescription, content, action, targetKeywords = [], pages = [], postId, suggestions = [], isStaticPage = false, suggestionIndex } = await req.json() as SEOAnalysisRequest;
 
     console.log(`SEO Optimizer: ${action} request${action === 'bulk-analyze' ? ` for ${pages.length} pages` : ` for ${url}`}`);
 
@@ -356,7 +358,68 @@ URL: ${url}
 SEO Issues to Fix:
 ${suggestions.map(s => `- ${s.type.toUpperCase()}: ${s.issue} | Suggestion: ${s.suggestion}`).join('\n')}
 
-Provide optimized versions that address these specific issues while maintaining quality and readability.`;
+        Provide optimized versions that address these specific issues while maintaining quality and readability.`;
+        break;
+
+      case 'regenerate-individual-fix':
+        if (typeof req.body.suggestionIndex !== 'number' || !suggestions || !suggestions[req.body.suggestionIndex]) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Invalid suggestion index provided'
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const targetSuggestion = suggestions[req.body.suggestionIndex];
+        systemPrompt = `You are an expert SEO copywriter. Generate 3 alternative proposed fixes for the specific SEO issue provided.
+
+Return format:
+{
+  "alternatives": [
+    {
+      "proposedFix": "alternative fix option 1 - exact text/content ready to apply",
+      "approach": "brief description of this approach",
+      "pros": "advantages of this solution"
+    },
+    {
+      "proposedFix": "alternative fix option 2 - exact text/content ready to apply", 
+      "approach": "brief description of this approach",
+      "pros": "advantages of this solution"
+    },
+    {
+      "proposedFix": "alternative fix option 3 - exact text/content ready to apply",
+      "approach": "brief description of this approach", 
+      "pros": "advantages of this solution"
+    }
+  ],
+  "recommendation": "which alternative is recommended and why"
+}`;
+
+        userPrompt = `Generate 3 alternative proposed fixes for this specific SEO issue:
+
+CONTEXT:
+URL: ${url}
+Title: ${title || 'Not provided'}
+Meta Description: ${metaDescription || 'Not provided'}
+Content Preview: ${content ? content.substring(0, 1000) : 'Not provided'}
+Target Keywords: ${targetKeywords.join(', ') || 'None specified'}
+
+SPECIFIC ISSUE TO FIX:
+Type: ${targetSuggestion.type}
+Priority: ${targetSuggestion.priority}
+Issue: ${targetSuggestion.issue}
+Current Suggestion: ${targetSuggestion.suggestion}
+Current Proposed Fix: ${targetSuggestion.proposedFix || 'None provided'}
+
+Provide 3 different approaches to fix this specific issue. Each proposedFix must be:
+- Complete and ready to apply directly
+- Different in approach from the others
+- Optimized for the issue type (${targetSuggestion.type})
+- Appropriate for the priority level (${targetSuggestion.priority})
+
+Focus on variety: conservative vs bold approaches, different keyword placements, different lengths, etc.`;
         break;
 
         case 'apply-fixes':
