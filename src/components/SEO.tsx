@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
+import heroImage from '@/assets/hero-bg.jpg';
 
 interface SEOProps {
   title?: string;
@@ -139,7 +140,20 @@ const SEO = ({
       script.textContent = JSON.stringify(finalStructuredData);
     }
     
-  }, [isLoading, finalTitle, finalDescription, finalKeywords, finalCanonical, finalOgImage, finalOgType, finalStructuredData, noIndex]);
+    // Preload hero image for LCP optimization on homepage
+    if (location.pathname === '/') {
+      let preloadLink = document.querySelector('link[rel="preload"][as="image"][href*="hero-bg"]') as HTMLLinkElement;
+      if (!preloadLink) {
+        preloadLink = document.createElement('link');
+        preloadLink.setAttribute('rel', 'preload');
+        preloadLink.setAttribute('as', 'image');
+        preloadLink.setAttribute('href', heroImage);
+        preloadLink.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(preloadLink);
+      }
+    }
+    
+  }, [isLoading, finalTitle, finalDescription, finalKeywords, finalCanonical, finalOgImage, finalOgType, finalStructuredData, noIndex, location.pathname]);
 
   return null;
 };
