@@ -128,6 +128,22 @@ const SEO = ({
     }
     canonicalLink.setAttribute('href', finalCanonical || window.location.href);
     
+    // Preconnect hints for performance optimization
+    const preconnectDomains = [
+      'https://trfjldpqwzcuvfxxbkqs.supabase.co'
+    ];
+    
+    preconnectDomains.forEach(domain => {
+      let preconnectLink = document.querySelector(`link[rel="preconnect"][href="${domain}"]`) as HTMLLinkElement;
+      if (!preconnectLink) {
+        preconnectLink = document.createElement('link');
+        preconnectLink.setAttribute('rel', 'preconnect');
+        preconnectLink.setAttribute('href', domain);
+        preconnectLink.setAttribute('crossorigin', 'anonymous');
+        document.head.appendChild(preconnectLink);
+      }
+    });
+    
     // Structured Data
     if (finalStructuredData) {
       let script = document.querySelector('#structured-data') as HTMLScriptElement;
