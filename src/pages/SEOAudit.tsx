@@ -22,10 +22,12 @@ interface SEOAnalysis {
   url: string;
   title: string;
   meta_description: string;
+  content?: string;
   seo_score: number;
   title_score: number;
   meta_description_score: number;
   content_score: number;
+  keyword_density?: Record<string, number>;
   suggestions: SEOSuggestion[];
   created_at: string;
 }
@@ -44,7 +46,7 @@ const SEOAudit = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(true);
   const [analyses, setAnalyses] = useState<SEOAnalysis[]>([]);
-  const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
+  const [currentAnalysis, setCurrentAnalysis] = useState<SEOAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isBulkAnalyzing, setIsBulkAnalyzing] = useState(false);
   const [sitePages, setSitePages] = useState<Array<{url: string, title: string, content: string, type: 'post' | 'page', id?: string, isStatic?: boolean, metaDescription?: string, keywords?: string}>>([]);
@@ -226,12 +228,24 @@ const SEOAudit = () => {
       
       // Transform the data to match our interface
       const transformedData = (data || []).map(item => ({
-        ...item,
+        id: item.id,
+        url: item.url,
+        title: item.title || '',
+        meta_description: item.meta_description || '',
+        content: item.content || '',
+        seo_score: item.seo_score || 0,
+        title_score: item.title_score || 0,
+        meta_description_score: item.meta_description_score || 0,
+        content_score: item.content_score || 0,
+        keyword_density: (item.keyword_density && typeof item.keyword_density === 'object' && item.keyword_density !== null) 
+          ? item.keyword_density as Record<string, number>
+          : {},
         suggestions: Array.isArray(item.suggestions) 
           ? (item.suggestions as unknown) as SEOSuggestion[]
           : typeof item.suggestions === 'string' 
             ? JSON.parse(item.suggestions) 
-            : []
+            : [],
+        created_at: item.created_at
       }));
       
       setAnalyses(transformedData);
@@ -263,7 +277,17 @@ const SEOAudit = () => {
       if (error) throw error;
 
       if (data.success) {
-        setCurrentAnalysis(data.data);
+        const analysisData = {
+          ...data.data,
+          id: data.data.id || 'new-analysis',
+          seo_score: data.data.seoScore || data.data.seo_score || 0,
+          title_score: data.data.titleScore || data.data.title_score || 0,
+          meta_description_score: data.data.metaDescriptionScore || data.data.meta_description_score || 0,
+          content_score: data.data.contentScore || data.data.content_score || 0,
+          keyword_density: data.data.keywordDensity || data.data.keyword_density || {},
+          created_at: data.data.created_at || new Date().toISOString()
+        };
+        setCurrentAnalysis(analysisData);
         await fetchAnalyses(); // Refresh the list
         toast.success('SEO analysis completed!');
       } else {
@@ -334,6 +358,18 @@ const SEOAudit = () => {
     setFixPreviewOpen(true);
   };
 
+  const selectAnalysisForWork = (analysis: SEOAnalysis) => {
+    console.log('Selecting analysis for work:', {
+      analysisId: analysis.id,
+      url: analysis.url,
+      title: analysis.title,
+      suggestionsCount: analysis.suggestions?.length || 0
+    });
+    
+    setCurrentAnalysis(analysis);
+    toast.success(`Selected analysis for "${analysis.title}" - you can now apply individual fixes`);
+  };
+
   const handleFixesApplied = () => {
     // Refresh analyses after fixes are applied
     fetchAnalyses();
@@ -345,11 +381,16 @@ const SEOAudit = () => {
 
   const applyIndividualFix = async (suggestionIndex: number) => {
     if (!currentAnalysis) {
-      toast.error('No analysis data available');
+      toast.error('No analysis selected. Please select an analysis from the history or run a new analysis.');
       return;
     }
     
-    const suggestionKey = `${currentAnalysis.url || 'unknown'}-${suggestionIndex}`;
+    if (!currentAnalysis.url) {
+      toast.error('Analysis is missing URL data. Please select a valid analysis.');
+      return;
+    }
+    
+    const suggestionKey = `${currentAnalysis.url}-${suggestionIndex}`;
     const suggestion = currentAnalysis.suggestions?.[suggestionIndex];
     
     if (!suggestion) {
@@ -607,9 +648,14 @@ const SEOAudit = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    Analysis Results
+                    <div className="flex items-center gap-3">
+                      Analysis Results
+                      <Badge variant="secondary" className="text-xs">
+                        {currentAnalysis.url}
+                      </Badge>
+                    </div>
                     <Badge variant="outline" className="text-lg px-3 py-1">
-                      Score: {currentAnalysis.seoScore || 0}/100
+                      Score: {currentAnalysis.seo_score || 0}/100
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -619,36 +665,36 @@ const SEOAudit = () => {
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">Overall Score</label>
                       <div className="flex items-center gap-2">
-                        <Progress value={currentAnalysis.seoScore || 0} className="flex-1" />
-                        <span className={`font-bold ${getScoreColor(currentAnalysis.seoScore || 0)}`}>
-                          {currentAnalysis.seoScore || 0}
+                        <Progress value={currentAnalysis.seo_score || 0} className="flex-1" />
+                        <span className={`font-bold ${getScoreColor(currentAnalysis.seo_score || 0)}`}>
+                          {currentAnalysis.seo_score || 0}
                         </span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">Title</label>
                       <div className="flex items-center gap-2">
-                        <Progress value={currentAnalysis.titleScore || 0} className="flex-1" />
-                        <span className={`font-bold ${getScoreColor(currentAnalysis.titleScore || 0)}`}>
-                          {currentAnalysis.titleScore || 0}
+                        <Progress value={currentAnalysis.title_score || 0} className="flex-1" />
+                        <span className={`font-bold ${getScoreColor(currentAnalysis.title_score || 0)}`}>
+                          {currentAnalysis.title_score || 0}
                         </span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">Meta Description</label>
                       <div className="flex items-center gap-2">
-                        <Progress value={currentAnalysis.metaDescriptionScore || 0} className="flex-1" />
-                        <span className={`font-bold ${getScoreColor(currentAnalysis.metaDescriptionScore || 0)}`}>
-                          {currentAnalysis.metaDescriptionScore || 0}
+                        <Progress value={currentAnalysis.meta_description_score || 0} className="flex-1" />
+                        <span className={`font-bold ${getScoreColor(currentAnalysis.meta_description_score || 0)}`}>
+                          {currentAnalysis.meta_description_score || 0}
                         </span>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">Content</label>
                       <div className="flex items-center gap-2">
-                        <Progress value={currentAnalysis.contentScore || 0} className="flex-1" />
-                        <span className={`font-bold ${getScoreColor(currentAnalysis.contentScore || 0)}`}>
-                          {currentAnalysis.contentScore || 0}
+                        <Progress value={currentAnalysis.content_score || 0} className="flex-1" />
+                        <span className={`font-bold ${getScoreColor(currentAnalysis.content_score || 0)}`}>
+                          {currentAnalysis.content_score || 0}
                         </span>
                       </div>
                     </div>
@@ -792,11 +838,11 @@ const SEOAudit = () => {
                   )}
 
                   {/* Keyword Density */}
-                  {currentAnalysis.keywordDensity && Object.keys(currentAnalysis.keywordDensity).length > 0 && (
+                  {currentAnalysis.keyword_density && Object.keys(currentAnalysis.keyword_density).length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-lg font-semibold">Keyword Density</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {Object.entries(currentAnalysis.keywordDensity).map(([keyword, density]: [string, any]) => (
+                        {Object.entries(currentAnalysis.keyword_density).map(([keyword, density]: [string, any]) => (
                           <div key={keyword} className="border rounded p-3 text-center">
                             <p className="font-medium text-sm">{keyword}</p>
                             <p className="text-lg font-bold text-primary">{density}%</p>
@@ -808,40 +854,81 @@ const SEOAudit = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Helpful message when no analysis is selected */}
+            {!currentAnalysis && (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <Search className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Analysis Selected</h3>
+                  <p className="text-muted-foreground text-center max-w-md mb-4">
+                    Select an analysis from the <strong>Analysis History</strong> tab to view detailed recommendations and apply individual fixes, or run a new analysis above.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => {
+                      const historyTab = document.querySelector('[value="history"]') as HTMLElement;
+                      if (historyTab) historyTab.click();
+                    }}>
+                      View History
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="history" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Recent Analyses</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Click on any analysis to select it for individual fix application. Selected analysis will appear in the SEO Analyzer tab.
+                </p>
               </CardHeader>
               <CardContent>
                 {analyses.length > 0 ? (
                   <div className="space-y-4">
-                    {analyses.map((analysis) => (
-                      <div key={analysis.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <h3 className="font-medium">{analysis.title}</h3>
-                            <Badge variant="outline">{analysis.seo_score}/100</Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(analysis.created_at).toLocaleDateString()}
-                            </span>
-                            {analysis.suggestions && analysis.suggestions.length > 0 && (
-                              <Button 
-                                onClick={() => openFixPreview(analysis)}
-                                size="sm"
-                                variant="outline"
-                                className="flex items-center gap-1"
-                              >
-                                <Sparkles className="h-3 w-3" />
-                                Fix Issues
-                              </Button>
-                            )}
-                          </div>
-                        </div>
+                     {analyses.map((analysis) => (
+                       <div 
+                         key={analysis.id} 
+                         className={`border rounded-lg p-4 transition-colors cursor-pointer ${
+                           currentAnalysis?.id === analysis.id 
+                             ? 'bg-primary/10 border-primary' 
+                             : 'hover:bg-muted/30'
+                         }`}
+                         onClick={() => selectAnalysisForWork(analysis)}
+                       >
+                         <div className="flex items-center justify-between mb-2">
+                           <div className="flex items-center gap-3">
+                             <h3 className="font-medium">{analysis.title}</h3>
+                             <Badge variant="outline">{analysis.seo_score}/100</Badge>
+                             {currentAnalysis?.id === analysis.id && (
+                               <Badge variant="default" className="bg-primary">
+                                 <CheckCircle className="h-3 w-3 mr-1" />
+                                 Selected
+                               </Badge>
+                             )}
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-sm text-muted-foreground">
+                               {new Date(analysis.created_at).toLocaleDateString()}
+                             </span>
+                             {analysis.suggestions && analysis.suggestions.length > 0 && (
+                               <Button 
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   openFixPreview(analysis);
+                                 }}
+                                 size="sm"
+                                 variant="outline"
+                                 className="flex items-center gap-1"
+                               >
+                                 <Sparkles className="h-3 w-3" />
+                                 Preview & Apply All
+                               </Button>
+                             )}
+                           </div>
+                         </div>
                         <p className="text-sm text-muted-foreground mb-2">{analysis.url}</p>
                         <div className="grid grid-cols-3 gap-4 text-sm mb-2">
                           <div>Title: <span className={getScoreColor(analysis.title_score)}>{analysis.title_score}</span></div>
