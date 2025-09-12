@@ -191,10 +191,10 @@ export function SEOIssueDrawer({
 
           <Separator />
 
-          {/* Proposed Fix */}
+          {/* Replacement Text */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Proposed Fix</Label>
+              <Label className="text-sm font-medium">Replacement Text</Label>
               <Button
                 variant="outline"
                 size="sm"
@@ -205,11 +205,15 @@ export function SEOIssueDrawer({
                 {regenerating ? 'Regenerating...' : 'Regenerate'}
               </Button>
             </div>
+            
+            <div className="text-xs text-muted-foreground mb-2">
+              This is the exact text that will replace the current content when you apply the fix.
+            </div>
 
             <Textarea
               value={editedFix}
               onChange={(e) => setEditedFix(e.target.value)}
-              placeholder="Edit the proposed fix..."
+              placeholder="Enter the replacement text..."
               rows={4}
               className="resize-none"
             />
@@ -225,15 +229,21 @@ export function SEOIssueDrawer({
             )}
           </div>
 
-          {/* Character Count for specific fields */}
+            {/* Character Count for specific fields */}
           {(issue.whereField.includes('title') || issue.whereField.includes('description')) && (
-            <div className="text-xs text-muted-foreground">
-              Character count: {editedFix.length}
+            <div className="text-xs">
+              <span className="text-muted-foreground">Character count: {editedFix.length}</span>
               {issue.whereField.includes('title') && editedFix.length > 60 && (
-                <span className="text-orange-600 ml-1">(Recommended: 50-60 characters)</span>
+                <span className="text-orange-600 ml-2 font-medium">⚠️ Too long (Recommended: 50-60 characters)</span>
+              )}
+              {issue.whereField.includes('title') && editedFix.length <= 60 && editedFix.length >= 30 && (
+                <span className="text-green-600 ml-2">✓ Good length</span>
               )}
               {issue.whereField.includes('description') && editedFix.length > 160 && (
-                <span className="text-orange-600 ml-1">(Recommended: 150-160 characters)</span>
+                <span className="text-orange-600 ml-2 font-medium">⚠️ Too long (Recommended: 150-160 characters)</span>
+              )}
+              {issue.whereField.includes('description') && editedFix.length <= 160 && editedFix.length >= 120 && (
+                <span className="text-green-600 ml-2">✓ Good length</span>
               )}
             </div>
           )}

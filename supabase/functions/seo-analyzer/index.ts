@@ -72,7 +72,7 @@ serve(async (req) => {
     "example": "Example of the issue"
   },
   "currentValue": "Current value or null",
-  "proposedFix": "Specific fix recommendation"
+  "proposedFix": "EXACT replacement text that will be used (not advice, but the actual content)"
 }
 
 PAGE TO ANALYZE:
@@ -86,6 +86,10 @@ IMPORTANT:
 - Include 3-8 realistic issues
 - Focus on common SEO problems
 - Use exact severity values: HIGH, MEDIUM, LOW
+- For "proposedFix", provide the EXACT replacement text, not advice or recommendations
+- For titles: Generate the actual improved title text (under 60 chars)
+- For meta descriptions: Generate the actual description text (150-160 chars)
+- For content: Generate the specific improved text snippet
 
 Example response format:
 [
@@ -96,7 +100,7 @@ Example response format:
     "why": "Search engines may truncate titles over 60 characters",
     "where": {"field": "title", "example": "Current title"},
     "currentValue": "${title}",
-    "proposedFix": "Shorter, keyword-focused title"
+    "proposedFix": "AI & Cloud: Enterprise Centers of Empowerment"
   }
 ]`;
 
@@ -242,19 +246,17 @@ Example response format:
       const { issueContext, category } = await req.json();
       console.log('Regenerating fix for category:', category);
       
-      const regeneratePrompt = `Generate a specific SEO fix for this issue. Return ONLY the fix text, no JSON, no markdown, no explanation.
-
+      const regeneratePrompt = `Generate specific replacement text for this SEO issue:
 Issue Context: ${issueContext}
 Category: ${category}
 
-Requirements:
-- For titles: 50-60 characters, include main keyword
-- For meta descriptions: 150-160 characters, compelling call-to-action  
-- For headings: Clear, descriptive, scannable
-- For content: Natural keyword integration
-- For links: Meaningful anchor text
+IMPORTANT: Provide the EXACT replacement text that will be used, not advice.
+- For titles: Generate optimized title (under 60 characters)
+- For meta descriptions: Generate description (150-160 characters) 
+- For content: Generate the specific improved text
+- For other fields: Generate the exact replacement value
 
-Return only the replacement text/content:`;
+Return ONLY the replacement text, no explanations.`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -265,7 +267,7 @@ Return only the replacement text/content:`;
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'You are an SEO expert. Return only the requested fix text, no formatting, no explanation.' },
+            { role: 'system', content: 'You are an SEO expert. Return only the specific replacement text that will replace the current content, not advice or recommendations.' },
             { role: 'user', content: regeneratePrompt }
           ],
           max_tokens: 200,
