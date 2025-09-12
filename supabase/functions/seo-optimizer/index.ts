@@ -66,6 +66,8 @@ serve(async (req) => {
       case 'analyze':
         systemPrompt = `You are an expert SEO analyst. Analyze the provided content and return a JSON response with SEO scores and specific, actionable proposed fixes.
 
+CRITICAL: Every suggestion must include a complete, ready-to-use "proposedFix" field with the exact text that should replace the current content.
+
 Return format:
 {
   "seoScore": number (0-100),
@@ -79,7 +81,7 @@ Return format:
       "priority": "high|medium|low",
       "issue": "description of the issue",
       "suggestion": "specific actionable recommendation",
-      "proposedFix": "exact text/content that should replace the current content",
+      "proposedFix": "REQUIRED: exact replacement text/content ready to apply",
       "impact": "expected impact description"
     }
   ],
@@ -96,14 +98,17 @@ Meta Description: ${metaDescription || 'Not provided'}
 Content: ${content ? content.substring(0, 15000) : 'Not provided'}
 Target Keywords: ${targetKeywords.join(', ') || 'None specified'}
 
-For each suggestion, provide:
-1. The specific issue identified
-2. An actionable recommendation 
-3. A "proposedFix" with the exact text/content that should replace the current content
+REQUIREMENTS for each suggestion:
+1. Identify the specific issue
+2. Provide actionable recommendation 
+3. MUST include "proposedFix" with exact replacement text ready to apply
+   - For title issues: provide complete optimized title
+   - For meta description issues: provide complete optimized meta description  
+   - For content issues: provide specific text improvements or structure changes
 
 Focus on: title length (50-60 chars), meta description (150-160 chars), keyword usage, content structure, readability, and missing elements.
 
-Make the proposedFix field contain the actual improved text that can be directly applied.`;
+Every proposedFix must be complete, specific, and directly applicable.`;
         break;
 
       case 'suggest':

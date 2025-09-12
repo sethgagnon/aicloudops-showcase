@@ -377,53 +377,15 @@ const SEOAudit = () => {
   };
 
   const selectAnalysisForWork = (analysis: SEOAnalysis) => {
-    console.log('Selecting analysis for work:', {
-      analysisId: analysis.id,
-      url: analysis.url,
-      title: analysis.title,
-      suggestionsCount: analysis.suggestions?.length || 0
-    });
-    
-    // Validate and ensure data integrity before setting state
-    if (!analysis || typeof analysis !== 'object') {
-      console.error('Invalid analysis object:', analysis);
-      toast.error('Invalid analysis data. Please try selecting again.');
+    // Simple validation
+    if (!analysis?.url || !analysis?.title) {
+      toast.error('Invalid analysis data. Please run a new analysis.');
       return;
     }
     
-    if (!analysis.url || typeof analysis.url !== 'string') {
-      console.error('Invalid URL in analysis:', { url: analysis.url, type: typeof analysis.url });
-      toast.error('Analysis is missing valid URL data. Please run a new analysis.');
-      return;
-    }
-    
-    // Create a clean copy to prevent any reference issues
-    const cleanAnalysis: SEOAnalysis = {
-      id: String(analysis.id || ''),
-      url: String(analysis.url || ''),
-      title: String(analysis.title || ''),
-      meta_description: String(analysis.meta_description || ''),
-      content: String(analysis.content || ''),
-      seo_score: Number(analysis.seo_score || 0),
-      title_score: Number(analysis.title_score || 0),
-      meta_description_score: Number(analysis.meta_description_score || 0),
-      content_score: Number(analysis.content_score || 0),
-      keyword_density: (analysis.keyword_density && typeof analysis.keyword_density === 'object') 
-        ? analysis.keyword_density 
-        : {},
-      suggestions: Array.isArray(analysis.suggestions) ? analysis.suggestions : [],
-      created_at: String(analysis.created_at || new Date().toISOString())
-    };
-    
-    console.log('Setting clean analysis:', {
-      id: cleanAnalysis.id,
-      url: cleanAnalysis.url,
-      urlType: typeof cleanAnalysis.url,
-      title: cleanAnalysis.title
-    });
-    
-    setCurrentAnalysis(cleanAnalysis);
-    toast.success(`Selected analysis for "${cleanAnalysis.title}" - you can now apply individual fixes`);
+    // Set current analysis directly - no complex validation needed
+    setCurrentAnalysis(analysis);
+    toast.success(`Selected analysis for "${analysis.title}"`);
   };
 
   const handleFixesApplied = () => {
