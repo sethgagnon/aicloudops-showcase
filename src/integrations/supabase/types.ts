@@ -531,6 +531,160 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_change_history: {
+        Row: {
+          applied_at: string
+          applied_by: string
+          can_undo: boolean
+          diff: string | null
+          field_name: string
+          id: string
+          issue_id: string | null
+          new_value: string
+          old_value: string | null
+          page_id: string
+          page_type: string
+          selector: string | null
+        }
+        Insert: {
+          applied_at?: string
+          applied_by: string
+          can_undo?: boolean
+          diff?: string | null
+          field_name: string
+          id?: string
+          issue_id?: string | null
+          new_value: string
+          old_value?: string | null
+          page_id: string
+          page_type: string
+          selector?: string | null
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string
+          can_undo?: boolean
+          diff?: string | null
+          field_name?: string
+          id?: string
+          issue_id?: string | null
+          new_value?: string
+          old_value?: string | null
+          page_id?: string
+          page_type?: string
+          selector?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_change_history_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "seo_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_issues: {
+        Row: {
+          category: string
+          created_at: string
+          current_value: string | null
+          id: string
+          proposed_fix: string
+          report_id: string
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+          where_example: string | null
+          where_field: string
+          where_selector: string | null
+          why: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          current_value?: string | null
+          id?: string
+          proposed_fix: string
+          report_id: string
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string
+          where_example?: string | null
+          where_field: string
+          where_selector?: string | null
+          why: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          current_value?: string | null
+          id?: string
+          proposed_fix?: string
+          report_id?: string
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          where_example?: string | null
+          where_field?: string
+          where_selector?: string | null
+          why?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_issues_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "seo_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_reports: {
+        Row: {
+          analyzed_by: string
+          content: string | null
+          created_at: string
+          generated_at: string
+          id: string
+          page_id: string
+          page_type: string
+          summary: Json
+          title: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          analyzed_by: string
+          content?: string | null
+          created_at?: string
+          generated_at?: string
+          id?: string
+          page_id: string
+          page_type: string
+          summary?: Json
+          title?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          analyzed_by?: string
+          content?: string | null
+          created_at?: string
+          generated_at?: string
+          id?: string
+          page_id?: string
+          page_type?: string
+          summary?: Json
+          title?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       static_pages: {
         Row: {
           canonical: string | null
