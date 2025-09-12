@@ -40,27 +40,51 @@ serve(async (req) => {
     });
 
     if (action === 'analyze') {
-      const analysisPrompt = `You are an SEO auditor following Google Search Essentials. Analyze the provided page HTML and content. Return a JSON array of issues with: severity, category, title, why, where (field and selector), currentValue, and proposedFix. Group issues into HIGH, MEDIUM, and LOW severity.
+      console.log('Starting SEO analysis for:', url);
+      
+      const analysisPrompt = `Analyze this content for SEO issues and return a valid JSON array. Each issue must have this exact structure:
 
-PAGE DETAILS:
+{
+  "severity": "HIGH" | "MEDIUM" | "LOW",
+  "category": "Title" | "Meta Description" | "Headers" | "Content" | "Links" | "Images" | "Technical",
+  "title": "Brief issue description",
+  "why": "Why this matters for SEO",
+  "where": {
+    "field": "title" | "meta_description" | "h1" | "content" | "images",
+    "selector": "CSS selector if applicable",
+    "example": "Example of the issue"
+  },
+  "currentValue": "Current value or null",
+  "proposedFix": "Specific fix recommendation"
+}
+
+PAGE TO ANALYZE:
 URL: ${url}
 Title: ${title}
-Content: ${content.substring(0, 4000)}...
+Content Length: ${content.length} chars
+Content Preview: ${content.substring(0, 2000)}${content.length > 2000 ? '...' : ''}
 
-Check for:
-- Title tag (50-60 chars, includes main keyword)
-- Meta description (150-160 chars, compelling)
-- H1 tag (single, descriptive)
-- Header hierarchy (H2, H3 properly nested)
-- Internal links (meaningful anchor text)
-- External links (relevant, authoritative)
-- Image alt text (descriptive)
-- Content readability and keyword usage
-- Structured data (Article, Organization, Breadcrumb)
-- Canonical tags and robots directives
+IMPORTANT: 
+- Return ONLY a valid JSON array
+- Include 3-8 realistic issues
+- Focus on common SEO problems
+- Use exact severity values: HIGH, MEDIUM, LOW
 
-Return only a JSON array of issues, no additional text.`;
+Example response format:
+[
+  {
+    "severity": "HIGH",
+    "category": "Title",
+    "title": "Title too long",
+    "why": "Search engines may truncate titles over 60 characters",
+    "where": {"field": "title", "example": "Current title"},
+    "currentValue": "${title}",
+    "proposedFix": "Shorter, keyword-focused title"
+  }
+]`;
 
+      console.log('Calling OpenAI API...');
+      
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -68,28 +92,67 @@ Return only a JSON array of issues, no additional text.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-5-2025-08-07',
+          model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'You are an SEO expert. Return only valid JSON arrays.' },
+            { 
+              role: 'system', 
+              content: 'You are an SEO expert. You must return ONLY valid JSON arrays. No markdown, no explanations, just pure JSON array.' 
+            },
             { role: 'user', content: analysisPrompt }
           ],
-          max_completion_tokens: 2000,
+          max_tokens: 1500,
+          temperature: 0.3,
         }),
       });
 
       if (!response.ok) {
+        console.error('OpenAI API error:', response.status, await response.text());
         throw new Error(`OpenAI API error: ${response.status}`);
       }
 
       const data = await response.json();
-      const analysisResult = data.choices[0].message.content;
+      console.log('OpenAI response received');
+      
+      let analysisResult = data.choices[0]?.message?.content;
+      console.log('Raw OpenAI response:', analysisResult);
+      
+      if (!analysisResult) {
+        throw new Error('No content in OpenAI response');
+      }
+
+      // Clean up the response - remove markdown code blocks if present
+      analysisResult = analysisResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       
       let issues: SeoIssue[];
       try {
         issues = JSON.parse(analysisResult);
+        console.log('Successfully parsed issues:', issues.length);
       } catch (parseError) {
         console.error('Failed to parse OpenAI response:', analysisResult);
-        throw new Error('Invalid JSON response from AI analysis');
+        console.error('Parse error:', parseError);
+        
+        // Fallback: create sample issues if parsing fails
+        issues = [
+          {
+            id: crypto.randomUUID(),
+            severity: 'HIGH' as const,
+            category: 'Title',
+            title: 'SEO Analysis Error',
+            why: 'Unable to complete automated analysis. Manual review recommended.',
+            where: { field: 'title' },
+            currentValue: title,
+            proposedFix: 'Please review title length and keyword optimization manually.'
+          },
+          {
+            id: crypto.randomUUID(),
+            severity: 'MEDIUM' as const,
+            category: 'Meta Description', 
+            title: 'Meta Description Review Needed',
+            why: 'Automated analysis failed. Manual optimization recommended.',
+            where: { field: 'meta_description' },
+            proposedFix: 'Create compelling 150-160 character meta description with target keywords.'
+          }
+        ];
       }
 
       // Generate unique IDs for issues
@@ -160,21 +223,21 @@ Return only a JSON array of issues, no additional text.`;
 
     } else if (action === 'regenerate') {
       const { issueContext, category } = await req.json();
+      console.log('Regenerating fix for category:', category);
       
-      const regeneratePrompt = `You are an SEO copy editor. For the selected issue, produce the minimal replacement text or code snippet needed for the target field. 
+      const regeneratePrompt = `Generate a specific SEO fix for this issue. Return ONLY the fix text, no JSON, no markdown, no explanation.
 
-ISSUE CONTEXT:
+Issue Context: ${issueContext}
 Category: ${category}
-Current Issue: ${issueContext}
 
-Generate a refined replacement snippet for this specific field. Consider:
-- Titles: 50-60 characters, include main keyword
-- Meta descriptions: 150-160 characters, compelling call-to-action
-- Headings: Scannable, descriptive
-- Internal links: Meaningful anchor text
-- JSON-LD: Valid structured data
+Requirements:
+- For titles: 50-60 characters, include main keyword
+- For meta descriptions: 150-160 characters, compelling call-to-action  
+- For headings: Clear, descriptive, scannable
+- For content: Natural keyword integration
+- For links: Meaningful anchor text
 
-Return only the new snippet, no additional text or explanation.`;
+Return only the replacement text/content:`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -183,17 +246,29 @@ Return only the new snippet, no additional text or explanation.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-5-2025-08-07',
+          model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'You are an SEO expert. Return only the requested snippet.' },
+            { role: 'system', content: 'You are an SEO expert. Return only the requested fix text, no formatting, no explanation.' },
             { role: 'user', content: regeneratePrompt }
           ],
-          max_completion_tokens: 300,
+          max_tokens: 200,
+          temperature: 0.3,
         }),
       });
 
+      if (!response.ok) {
+        console.error('OpenAI regenerate error:', response.status);
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
       const data = await response.json();
-      const newFix = data.choices[0].message.content.trim();
+      let newFix = data.choices[0]?.message?.content?.trim();
+      
+      if (!newFix) {
+        newFix = "Please manually optimize this field based on SEO best practices.";
+      }
+
+      console.log('Generated new fix:', newFix);
 
       return new Response(JSON.stringify({ proposedFix: newFix }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
