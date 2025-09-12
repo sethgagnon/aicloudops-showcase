@@ -24,29 +24,77 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log('=== SITEMAP GENERATION START ===');
+  
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Verify environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseKey: !!supabaseKey,
+      supabaseUrlLength: supabaseUrl?.length || 0,
+      supabaseKeyLength: supabaseKey?.length || 0
+    });
 
-    // Fetch published blog posts
-    const { data: posts, error: postsError } = await supabase
-      .from('posts')
-      .select('slug, updated_at, created_at')
-      .eq('status', 'published')
-      .order('updated_at', { ascending: false });
-
-    if (postsError) {
-      console.error('Error fetching posts:', postsError);
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing environment variables:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
+      throw new Error('Missing required environment variables');
     }
 
-    // Fetch static pages
-    const { data: staticPages, error: pagesError } = await supabase
-      .from('static_pages')
-      .select('path, updated_at');
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('Supabase client created successfully');
 
-    if (pagesError) {
-      console.error('Error fetching static pages:', pagesError);
+    // Initialize variables for data
+    let posts: BlogPost[] = [];
+    let staticPages: StaticPage[] = [];
+
+    // Fetch published blog posts with enhanced error handling
+    console.log('Fetching published blog posts...');
+    try {
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select('slug, updated_at, created_at')
+        .eq('status', 'published')
+        .order('updated_at', { ascending: false });
+
+      if (postsError) {
+        console.error('Posts query error:', {
+          message: postsError.message,
+          details: postsError.details,
+          hint: postsError.hint,
+          code: postsError.code
+        });
+      } else {
+        posts = postsData || [];
+        console.log(`Successfully fetched ${posts.length} published posts`);
+        console.log('Post slugs:', posts.map(p => p.slug));
+      }
+    } catch (postsException) {
+      console.error('Exception fetching posts:', postsException);
+    }
+
+    // Fetch static pages with enhanced error handling
+    console.log('Fetching static pages...');
+    try {
+      const { data: pagesData, error: pagesError } = await supabase
+        .from('static_pages')
+        .select('path, updated_at');
+
+      if (pagesError) {
+        console.error('Static pages query error:', {
+          message: pagesError.message,
+          details: pagesError.details,
+          hint: pagesError.hint,
+          code: pagesError.code
+        });
+      } else {
+        staticPages = pagesData || [];
+        console.log(`Successfully fetched ${staticPages.length} static pages`);
+      }
+    } catch (pagesException) {
+      console.error('Exception fetching static pages:', pagesException);
     }
 
     const baseUrl = 'https://aicloudops.tech';
