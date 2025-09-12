@@ -1,1 +1,3 @@
-/sitemap.xml https://trfjldpqwzcuvfxxbkqs.supabase.co/functions/v1/generate-sitemap 302
+# Sitemap redirects with cache-busting
+/sitemap.xml https://trfjldpqwzcuvfxxbkqs.supabase.co/functions/v1/generate-sitemap 200!
+/sitemap https://trfjldpqwzcuvfxxbkqs.supabase.co/functions/v1/generate-sitemap 200!

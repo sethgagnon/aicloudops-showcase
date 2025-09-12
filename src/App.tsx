@@ -54,9 +54,10 @@ const App = () => (
             <Route path="/admin/polls" element={<AdminPolls />} />
             <Route path="/admin/analytics" element={<Analytics />} />
             
-            <Route path="/admin/sitemap" element={<AdminSitemap />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+             <Route path="/admin/sitemap" element={<AdminSitemap />} />
+             <Route path="/sitemap" element={<Sitemap />} />
+             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+             <Route path="*" element={<NotFound />} />
             </Routes>
           </AnalyticsWrapper>
         </BrowserRouter>

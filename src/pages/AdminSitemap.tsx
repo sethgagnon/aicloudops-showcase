@@ -83,8 +83,14 @@ const AdminSitemap = () => {
   const generateSitemap = async () => {
     setGenerating(true);
     try {
+      // Add cache-busting timestamp
+      const timestamp = Date.now();
       const { data, error } = await supabase.functions.invoke('generate-sitemap', {
         method: 'GET',
+        body: { 
+          cacheBuster: timestamp,
+          forceRefresh: true 
+        }
       });
 
       if (error) {
@@ -96,8 +102,11 @@ const AdminSitemap = () => {
       
       toast({
         title: "Sitemap generated successfully",
-        description: "The sitemap has been updated with the latest content.",
+        description: "The sitemap has been updated with cache-busting headers.",
       });
+
+      // Force refresh browser cache by opening sitemap in new tab
+      window.open(`https://aicloudops.tech/sitemap.xml?t=${timestamp}`, '_blank');
 
       // Refresh stats
       await fetchSitemapStats();
