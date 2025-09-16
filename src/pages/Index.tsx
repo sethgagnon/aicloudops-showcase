@@ -40,7 +40,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <SEO 
         title="Seth Gagnon | AI, Cloud & Leadership Insights - AI Cloud Ops"
-        description="Expert insights on AI leadership, cloud architecture, and engineering team management from technology executive Seth Gagnon. Strategic guidance for digital transformation."
+        description="AI, Cloud & Leadership insights from Seth Gagnon. Expert strategies for digital transformation, cloud architecture, and AI-driven team management."
         keywords="Seth Gagnon, AI leadership, cloud strategy, digital transformation, engineering management, technology consulting, AWS, Azure, GCP"
         canonical="https://aicloudops.tech"
         structuredData={structuredData}
