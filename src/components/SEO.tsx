@@ -128,7 +128,7 @@ const SEO = ({
     }
     canonicalLink.setAttribute('href', finalCanonical || window.location.href);
     
-    // Preconnect hints for performance optimization
+    // Critical preconnect hints for performance optimization - added early
     const preconnectDomains = [
       'https://trfjldpqwzcuvfxxbkqs.supabase.co'
     ];
@@ -140,7 +140,23 @@ const SEO = ({
         preconnectLink.setAttribute('rel', 'preconnect');
         preconnectLink.setAttribute('href', domain);
         preconnectLink.setAttribute('crossorigin', 'anonymous');
-        document.head.appendChild(preconnectLink);
+        // Insert at the beginning of head for priority
+        document.head.insertBefore(preconnectLink, document.head.firstChild);
+      }
+    });
+
+    // Add DNS prefetch as fallback
+    const dnsPrefetchDomains = [
+      'https://trfjldpqwzcuvfxxbkqs.supabase.co'
+    ];
+    
+    dnsPrefetchDomains.forEach(domain => {
+      let dnsPrefetchLink = document.querySelector(`link[rel="dns-prefetch"][href="${domain}"]`) as HTMLLinkElement;
+      if (!dnsPrefetchLink) {
+        dnsPrefetchLink = document.createElement('link');
+        dnsPrefetchLink.setAttribute('rel', 'dns-prefetch');
+        dnsPrefetchLink.setAttribute('href', domain);
+        document.head.insertBefore(dnsPrefetchLink, document.head.firstChild);
       }
     });
     

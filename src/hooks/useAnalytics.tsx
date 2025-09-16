@@ -72,10 +72,21 @@ export const useAnalytics = () => {
       }
     }
     
-    // Small delay to ensure page title is set
-    const timeoutId = setTimeout(trackPageView, 100)
+    // Use requestIdleCallback to defer analytics tracking and avoid blocking critical resources
+    const scheduleTracking = () => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => trackPageView(), { timeout: 1000 });
+      } else {
+        // Fallback with longer delay for non-supporting browsers
+        setTimeout(trackPageView, 500);
+      }
+    };
     
-    return () => clearTimeout(timeoutId)
+    scheduleTracking()
+    
+    return () => {
+      // No cleanup needed for requestIdleCallback
+    }
   }, [location])
   
   // Track custom events
